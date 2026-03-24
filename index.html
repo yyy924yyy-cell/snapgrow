@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SnapGrow">
+<meta name="theme-color" content="#1a1a2e">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>SnapGrow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a12;
+    --bg2: #13131f;
+    --bg3: #1c1c2e;
+    --border: rgba(255,255,255,0.08);
+    --purple: #7F77DD;
+    --purple-light: #AFA9EC;
+    --purple-dark: #26215C;
+    --green: #1D9E75;
+    --green-light: #5DCAA5;
+    --text: #f0f0f8;
+    --text2: #9090b0;
+    --text3: #555570;
+    --accent: #7F77DD;
+    --card-r: 16px;
+    --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+  [data-theme="light"] {
+    --bg: #f5f5fa;
+    --bg2: #ffffff;
+    --bg3: #eeeef8;
+    --border: rgba(0,0,0,0.08);
+    --text: #1a1a2e;
+    --text2: #555570;
+    --text3: #aaaacc;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+
+  /* SPLASH */
+  #splash {
+    position: fixed; inset: 0; z-index: 999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: var(--bg);
+    transition: opacity 0.6s ease;
+  }
+  #splash.hidden { opacity: 0; pointer-events: none; }
+  #splash-bg {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    opacity: 0.25;
+  }
+  #splash-content { position: relative; text-align: center; }
+  #splash-icon { width: 100px; height: 100px; margin: 0 auto 20px; animation: splashPop 0.6s cubic-bezier(0.34,1.56,0.64,1) both; }
+  #splash-title { font-family: 'Space Mono', monospace; font-size: 32px; font-weight: 700; letter-spacing: -1px; animation: splashFade 0.8s 0.2s both; }
+  #splash-sub { font-size: 13px; color: var(--text2); margin-top: 6px; animation: splashFade 0.8s 0.4s both; }
+  @keyframes splashPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes splashFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* LAYOUT */
+  #app {
+    display: flex; flex-direction: column; height: 100%; max-width: 430px; margin: 0 auto;
+    position: relative; overflow: hidden;
+  }
+  .screen { position: absolute; inset: 0; overflow-y: auto; padding-bottom: 80px; transition: transform var(--transition), opacity var(--transition); }
+  .screen.hidden { opacity: 0; pointer-events: none; transform: translateX(30px); }
+  .screen.hidden.from-left { transform: translateX(-30px); }
+
+  /* NAV */
+  #nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 430px;
+    background: var(--bg2); border-top: 0.5px solid var(--border);
+    display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 12px 0; cursor: pointer; color: var(--text3); transition: color var(--transition);
+  }
+  .nav-item.active { color: var(--purple); }
+  .nav-item svg { width: 22px; height: 22px; }
+  .nav-item span { font-size: 10px; }
+
+  /* HEADER */
+  .screen-header {
+    padding: 56px 20px 16px;
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+  }
+  .screen-header h1 { font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .screen-header p { font-size: 13px; color: var(--text2); margin-top: 3px; }
+
+  /* HOME */
+  .home-hero {
+    margin: 0 16px 16px;
+    border-radius: var(--card-r);
+    overflow: hidden; position: relative; min-height: 140px;
+    background: var(--bg3);
+    display: flex; align-items: flex-end;
+  }
+  .home-hero-bg {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center; opacity: 0.5;
+  }
+  .home-hero-content {
+    position: relative; padding: 16px; width: 100%;
+    background: linear-gradient(to top, rgba(10,10,18,0.95) 0%, transparent 100%);
+  }
+  .hero-label { font-size: 10px; color: var(--text2); margin-bottom: 2px; }
+  .hero-score { font-family: 'Space Mono', monospace; font-size: 44px; font-weight: 700; color: var(--purple-light); line-height: 1; }
+  .hero-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .hero-badge {
+    display: inline-block; font-size: 10px; padding: 3px 10px; border-radius: 20px;
+    background: var(--purple-dark); color: var(--purple-light); margin-top: 6px;
+  }
+
+  /* MODE CARDS */
+  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px; margin-bottom: 16px; }
+  .mode-card {
+    background: var(--bg2); border-radius: var(--card-r); border: 0.5px solid var(--border);
+    padding: 16px; cursor: pointer; transition: all var(--transition); user-select: none;
+  }
+  .mode-card:active { transform: scale(0.97); }
+  .mode-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+  .mode-icon.purple { background: var(--purple-dark); color: var(--purple-light); }
+  .mode-icon.green { background: rgba(29,158,117,0.15); color: var(--green-light); }
+  .mode-icon svg { width: 18px; height: 18px; }
+  .mode-card h3 { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+  .mode-card p { font-size: 11px; color: var(--text2); }
+
+  /* STATS ROW */
+  .stats-row { display: flex; gap: 10px; padding: 0 16px; margin-bottom: 20px; }
+  .stat-card {
+    flex: 1; background: var(--bg2); border-radius: 12px; padding: 12px;
+    text-align: center; border: 0.5px solid var(--border);
+  }
+  .stat-card .val { font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700; }
+  .stat-card .lbl { font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+  /* SCORE SCREEN */
+  .score-preview {
+    margin: 0 16px 16px; border-radius: var(--card-r); overflow: hidden;
+    background: var(--bg3); min-height: 200px;
+    display: flex; align-items: center; justify-content: center; position: relative;
+    border: 0.5px solid var(--border);
+  }
+  .score-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--card-r); }
+  .score-preview-placeholder { color: var(--text3); font-size: 13px; text-align: center; }
+  .score-total { text-align: center; margin: 0 16px 16px; }
+  .score-total .big { font-family: 'Space Mono', monospace; font-size: 56px; font-weight: 700; color: var(--purple-light); line-height: 1; }
+  .score-total .sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+  .card { background: var(--bg2); border-radius: var(--card-r); border: 0.5px solid var(--border); padding: 16px; margin: 0 16px 12px; }
+  .card-label { font-size: 11px; color: var(--text3); margin-bottom: 12px; }
+
+  .item-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .item-row:last-child { margin-bottom: 0; }
+  .item-label { font-size: 12px; color: var(--text2); width: 60px; flex-shrink: 0; }
+  .bar-wrap { flex: 1; background: var(--bg3); border-radius: 4px; height: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; background: var(--purple); transition: width 1s cubic-bezier(0.4,0,0.2,1); }
+  .bar-fill.green { background: var(--green); }
+  .item-val { font-size: 12px; color: var(--text2); width: 24px; text-align: right; font-family: 'Space Mono', monospace; }
+
+  .advice-card {
+    background: rgba(29,158,117,0.06); border-radius: var(--card-r);
+    border: 0.5px solid rgba(29,158,117,0.2); padding: 16px; margin: 0 16px 16px;
+  }
+  .advice-card .advice-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .advice-card .advice-header svg { color: var(--green-light); width: 18px; height: 18px; flex-shrink: 0; }
+  .advice-card .advice-header span { font-size: 12px; font-weight: 500; color: var(--green-light); }
+  .advice-card p { font-size: 13px; color: var(--text2); line-height: 1.7; }
+  .advice-loading { display: flex; align-items: center; gap: 8px; }
+  .dots span { display: inline-block; animation: dot 1.4s infinite both; }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dot { 0%,80%,100% { opacity: 0.2; } 40% { opacity: 1; } }
+
+  /* UPLOAD AREA */
+  .upload-area {
+    margin: 0 16px 16px; border-radius: var(--card-r);
+    border: 1.5px dashed var(--border); padding: 40px 20px;
+    text-align: center; cursor: pointer; transition: all var(--transition);
+    background: var(--bg2);
+  }
+  .upload-area:active { border-color: var(--purple); background: var(--purple-dark); }
+  .upload-area svg { color: var(--text3); width: 36px; height: 36px; margin-bottom: 10px; }
+  .upload-area h3 { font-size: 15px; font-weight: 500; }
+  .upload-area p { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  #file-input { display: none; }
+
+  /* GENRE SELECT */
+  .genre-row { display: flex; gap: 8px; padding: 0 16px; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
+  .genre-row::-webkit-scrollbar { display: none; }
+  .genre-btn {
+    flex-shrink: 0; padding: 7px 16px; border-radius: 20px; font-size: 13px; cursor: pointer;
+    border: 0.5px solid var(--border); background: var(--bg2); color: var(--text2);
+    transition: all var(--transition); font-family: 'DM Sans', sans-serif;
+  }
+  .genre-btn.active { background: var(--purple-dark); color: var(--purple-light); border-color: var(--purple); }
+
+  .btn-primary {
+    width: calc(100% - 32px); margin: 0 16px; padding: 16px;
+    background: var(--purple); color: white; border: none; border-radius: 14px;
+    font-size: 15px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all var(--transition);
+  }
+  .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .back-btn {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px; color: var(--text2); cursor: pointer; padding: 0 16px;
+    margin-bottom: 16px; margin-top: 52px;
+    background: none; border: none; font-family: 'DM Sans', sans-serif;
+  }
+  .back-btn svg { width: 18px; height: 18px; }
+
+  /* GROWTH */
+  .chart-card { margin: 0 16px 12px; }
+  canvas { width: 100% !important; }
+
+  /* HISTORY */
+  .history-item {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg2); border-radius: 12px; border: 0.5px solid var(--border);
+    margin: 0 16px 8px; padding: 12px; cursor: pointer;
+    transition: all var(--transition);
+  }
+  .history-item:active { transform: scale(0.98); }
+  .history-thumb {
+    width: 52px; height: 52px; border-radius: 8px;
+    background: var(--bg3); flex-shrink: 0; overflow: hidden;
+  }
+  .history-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .history-info { flex: 1; min-width: 0; }
+  .history-info h4 { font-size: 13px; font-weight: 500; }
+  .history-info p { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .history-score { font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700; color: var(--purple-light); }
+
+  /* SETTINGS */
+  .setting-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg2); border-radius: 12px; border: 0.5px solid var(--border);
+    margin: 0 16px 8px; padding: 14px 16px;
+  }
+  .setting-row .info h4 { font-size: 14px; }
+  .setting-row .info p { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .toggle {
+    width: 44px; height: 26px; border-radius: 13px; background: var(--bg3);
+    position: relative; cursor: pointer; transition: background var(--transition);
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--purple); }
+  .toggle::after {
+    content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%;
+    background: white; top: 3px; left: 3px; transition: transform var(--transition);
+  }
+  .toggle.on::after { transform: translateX(18px); }
+  .api-input {
+    width: 100%; background: var(--bg3); border: 0.5px solid var(--border); border-radius: 10px;
+    padding: 12px 14px; font-size: 13px; color: var(--text); font-family: 'DM Sans', sans-serif;
+    margin-top: 8px;
+  }
+  .api-input:focus { outline: none; border-color: var(--purple); }
+  .section-title { font-size: 11px; color: var(--text3); padding: 0 16px; margin-bottom: 8px; margin-top: 8px; }
+
+  /* TEMA CARD */
+  .theme-preview { display: flex; gap: 8px; margin-top: 10px; }
+  .theme-opt {
+    flex: 1; height: 40px; border-radius: 8px; cursor: pointer; border: 2px solid transparent;
+    transition: border-color var(--transition); display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 500;
+  }
+  .theme-opt.dark-opt { background: #0a0a12; color: white; }
+  .theme-opt.light-opt { background: #f5f5fa; color: #1a1a2e; }
+  .theme-opt.selected { border-color: var(--purple); }
+
+  /* お題 */
+  .odai-card {
+    margin: 0 16px 16px; background: var(--bg2); border-radius: var(--card-r);
+    border: 1px solid rgba(93,202,165,0.3); padding: 20px; text-align: center;
+  }
+  .odai-card .odai-label { font-size: 11px; color: var(--green-light); margin-bottom: 8px; }
+  .odai-card .odai-text { font-size: 17px; font-weight: 500; line-height: 1.5; }
+  .odai-card .odai-genre { font-size: 11px; color: var(--text2); margin-top: 6px; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.7); display: flex; align-items: flex-end;
+    transition: opacity var(--transition);
+  }
+  .modal-overlay.hidden { opacity: 0; pointer-events: none; }
+  .modal-sheet {
+    background: var(--bg2); border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 430px; margin: 0 auto;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    transform: translateY(0); transition: transform var(--transition);
+  }
+  .modal-overlay.hidden .modal-sheet { transform: translateY(100%); }
+  .modal-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border); margin: 0 auto 16px; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+  .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.3; }
+  .empty-state p { font-size: 14px; }
+
+  .spin { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* TAG */
+  .tag { display: inline-block; font-size: 10px; padding: 3px 10px; border-radius: 20px; }
+  .tag.purple { background: var(--purple-dark); color: var(--purple-light); }
+  .tag.green { background: rgba(29,158,117,0.15); color: var(--green-light); }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div id="splash-bg"></div>
+  <div id="splash-content">
+    <svg id="splash-icon" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sg-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#1a1a2e"/>
+          <stop offset="100%" stop-color="#ffffff"/>
+        </linearGradient>
+        <linearGradient id="sg-r1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#534AB7"/><stop offset="100%" stop-color="#ccccff"/>
+        </linearGradient>
+        <linearGradient id="sg-r2" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#7F77DD"/><stop offset="100%" stop-color="#ffffff"/>
+        </linearGradient>
+        <linearGradient id="sg-ln" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#26215C"/><stop offset="100%" stop-color="#d0d0f0"/>
+        </linearGradient>
+        <linearGradient id="sg-leaf" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stop-color="#1D9E75"/><stop offset="100%" stop-color="#9FE1CB"/>
+        </linearGradient>
+      </defs>
+      <rect width="96" height="96" rx="22" fill="url(#sg-bg)"/>
+      <circle cx="48" cy="46" r="30" fill="none" stroke="url(#sg-r1)" stroke-width="1.5"/>
+      <circle cx="48" cy="46" r="22" fill="none" stroke="url(#sg-r2)" stroke-width="2.5"/>
+      <circle cx="48" cy="46" r="13" fill="url(#sg-ln)"/>
+      <circle cx="48" cy="46" r="9" fill="#1a1a2e" opacity="0.85"/>
+      <text x="48" y="50" font-size="9" font-weight="500" fill="#ffffff" text-anchor="middle" font-family="sans-serif" letter-spacing="0.5">SG</text>
+      <line x1="70" y1="22" x2="70" y2="14" stroke="url(#sg-leaf)" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="70" cy="12" r="4" fill="#5DCAA5"/>
+    </svg>
+    <div id="splash-title">SnapGrow</div>
+    <div id="splash-sub">撮影スキル向上アプリ</div>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- HOME SCREEN -->
+  <div id="screen-home" class="screen">
+    <div class="screen-header">
+      <h1>SnapGrow</h1>
+      <p>今日も1枚、腕を上げよう</p>
+    </div>
+
+    <div class="home-hero" id="home-hero">
+      <div class="home-hero-bg" id="hero-bg"></div>
+      <div class="home-hero-content">
+        <div class="hero-label">今日の最高スコア</div>
+        <div class="hero-score" id="hero-score">--</div>
+        <div class="hero-sub" id="hero-sub">まだ採点していません</div>
+        <span class="hero-badge" id="hero-badge" style="display:none"></span>
+      </div>
+    </div>
+
+    <p class="section-title">採点モードを選ぶ</p>
+    <div class="mode-grid">
+      <div class="mode-card" onclick="startFreeMode()">
+        <div class="mode-icon purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <h3>フリー採点</h3>
+        <p>写真をすぐ採点</p>
+      </div>
+      <div class="mode-card" onclick="startOdaiMode()">
+        <div class="mode-icon green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <h3>お題採点</h3>
+        <p>AIがお題を出す</p>
+      </div>
+    </div>
+
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card"><div class="val" id="stat-count">0</div><div class="lbl">採点回数</div></div>
+      <div class="stat-card"><div class="val" id="stat-best">--</div><div class="lbl">最高スコア</div></div>
+      <div class="stat-card"><div class="val" id="stat-days">0</div><div class="lbl">継続日数</div></div>
+    </div>
+  </div>
+
+  <!-- SCORING SCREEN -->
+  <div id="screen-score" class="screen hidden">
+    <button class="back-btn" onclick="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      戻る
+    </button>
+
+    <div id="odai-section" style="display:none">
+      <div class="odai-card">
+        <div class="odai-label">✦ 今日のお題</div>
+        <div class="odai-text" id="odai-text">お題を生成中...</div>
+        <div class="odai-genre" id="odai-genre"></div>
+      </div>
+    </div>
+
+    <p class="section-title">ジャンルを選ぶ</p>
+    <div class="genre-row">
+      <button class="genre-btn active" data-genre="風景・自然" onclick="selectGenre(this)">風景・自然</button>
+      <button class="genre-btn" data-genre="ポートレート" onclick="selectGenre(this)">ポートレート</button>
+      <button class="genre-btn" data-genre="街・スナップ" onclick="selectGenre(this)">街・スナップ</button>
+    </div>
+
+    <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <h3>写真を選ぶ</h3>
+      <p>タップしてカメラロールから選択</p>
+    </div>
+    <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)">
+
+    <div id="preview-section" style="display:none">
+      <div class="score-preview" id="score-preview">
+        <img id="preview-img" src="" alt="preview">
+      </div>
+      <button class="btn-primary" id="analyze-btn" onclick="analyzePhoto()">
+        AIに採点してもらう
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div id="screen-result" class="screen hidden">
+    <button class="back-btn" onclick="showScreen('score')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      もう一枚
+    </button>
+
+    <div class="score-preview" id="result-preview"></div>
+
+    <div class="score-total">
+      <div class="big" id="result-score">--</div>
+      <div class="sub" id="result-genre-tag"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">項目別スコア</div>
+      <div class="item-row">
+        <span class="item-label">構図</span>
+        <div class="bar-wrap"><div class="bar-fill" id="bar-0" style="width:0%"></div></div>
+        <span class="item-val" id="val-0">-</span>
+      </div>
+      <div class="item-row">
+        <span class="item-label">明るさ</span>
+        <div class="bar-wrap"><div class="bar-fill" id="bar-1" style="width:0%"></div></div>
+        <span class="item-val" id="val-1">-</span>
+      </div>
+      <div class="item-row">
+        <span class="item-label">色彩</span>
+        <div class="bar-wrap"><div class="bar-fill" id="bar-2" style="width:0%"></div></div>
+        <span class="item-val" id="val-2">-</span>
+      </div>
+      <div class="item-row">
+        <span class="item-label">被写体</span>
+        <div class="bar-wrap"><div class="bar-fill bar-fill.green" id="bar-3" style="width:0%"></div></div>
+        <span class="item-val" id="val-3">-</span>
+      </div>
+      <div class="item-row">
+        <span class="item-label">物語性</span>
+        <div class="bar-wrap"><div class="bar-fill" id="bar-4" style="width:0%"></div></div>
+        <span class="item-val" id="val-4">-</span>
+      </div>
+    </div>
+
+    <div class="advice-card">
+      <div class="advice-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <span>AIアドバイス</span>
+      </div>
+      <div id="advice-content"><div class="advice-loading"><div class="dots"><span>●</span><span>●</span><span>●</span></div></div></div>
+    </div>
+
+    <button class="btn-primary" style="margin-bottom:20px" onclick="startFreeMode()">もう一枚採点する</button>
+  </div>
+
+  <!-- GROWTH SCREEN -->
+  <div id="screen-growth" class="screen hidden">
+    <div class="screen-header">
+      <h1>成長グラフ</h1>
+      <p>スコアの推移を確認しよう</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="val" id="g-count">0</div><div class="lbl">採点回数</div></div>
+      <div class="stat-card"><div class="val" id="g-avg">--</div><div class="lbl">平均スコア</div></div>
+      <div class="stat-card" style="color:var(--green-light)"><div class="val" id="g-improve">+0</div><div class="lbl">スコア向上</div></div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="card-label">総合スコア推移</div>
+      <canvas id="line-chart" height="160"></canvas>
+    </div>
+
+    <div class="card chart-card">
+      <div class="card-label">スキルバランス</div>
+      <canvas id="radar-chart" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- HISTORY SCREEN -->
+  <div id="screen-history" class="screen hidden">
+    <div class="screen-header">
+      <h1>採点履歴</h1>
+      <p>過去の写真と結果を確認</p>
+    </div>
+    <div id="history-list"></div>
+  </div>
+
+  <!-- SETTINGS SCREEN -->
+  <div id="screen-settings" class="screen hidden">
+    <div class="screen-header">
+      <h1>設定</h1>
+    </div>
+
+    <p class="section-title">Gemini APIキー</p>
+    <div style="margin: 0 16px 16px;">
+      <input class="api-input" id="api-key-input" type="password" placeholder="AIza... で始まるキーを入力" oninput="saveApiKey()">
+      <p style="font-size:11px;color:var(--text3);margin-top:6px;">Google AI Studioで取得したAPIキーを入力してください</p>
+    </div>
+
+    <p class="section-title">外観</p>
+    <div class="setting-row">
+      <div class="info">
+        <h4>テーマ</h4>
+        <div class="theme-preview">
+          <div class="theme-opt dark-opt selected" id="theme-dark" onclick="setTheme('dark')">ダーク</div>
+          <div class="theme-opt light-opt" id="theme-light" onclick="setTheme('light')">ライト</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="section-title">アプリ情報</p>
+    <div class="setting-row">
+      <div class="info"><h4>バージョン</h4><p>1.0.0</p></div>
+    </div>
+    <div class="setting-row" style="cursor:pointer" onclick="clearData()">
+      <div class="info"><h4 style="color:#e24b4a">データをリセット</h4><p>全ての履歴を削除します</p></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div id="nav">
+    <div class="nav-item active" onclick="showScreen('home')" id="nav-home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>ホーム</span>
+    </div>
+    <div class="nav-item" onclick="showScreen('history')" id="nav-history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>履歴</span>
+    </div>
+    <div class="nav-item" onclick="showScreen('growth')" id="nav-growth">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>成長</span>
+    </div>
+    <div class="nav-item" onclick="showScreen('settings')" id="nav-settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>設定</span>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ====== STATE ======
+let currentScreen = 'home';
+let currentMode = 'free'; // free | odai
+let selectedGenre = '風景・自然';
+let currentImageBase64 = null;
+let currentOdai = null;
+let history = [];
+let lineChart = null;
+let radarChart = null;
+
+// ====== INIT ======
+window.addEventListener('load', () => {
+  loadData();
+  applyTheme(localStorage.getItem('sg_theme') || 'dark');
+  const apiKey = localStorage.getItem('sg_api_key');
+  if (apiKey) document.getElementById('api-key-input').value = apiKey;
+  updateHome();
+
+  // スプラッシュ
+  const splash = document.getElementById('splash');
+  const best = getBestEntry();
+  if (best && best.thumb) {
+    document.getElementById('splash-bg').style.backgroundImage = `url(${best.thumb})`;
+  }
+  setTimeout(() => { splash.classList.add('hidden'); }, 2500);
+});
+
+// ====== DATA ======
+function loadData() {
+  const raw = localStorage.getItem('sg_history');
+  history = raw ? JSON.parse(raw) : [];
+}
+function saveData() {
+  localStorage.setItem('sg_history', JSON.stringify(history));
+}
+function saveApiKey() {
+  localStorage.setItem('sg_api_key', document.getElementById('api-key-input').value);
+}
+function getBestEntry() {
+  if (!history.length) return null;
+  return history.reduce((a, b) => a.score > b.score ? a : b);
+}
+
+// ====== THEME ======
+function setTheme(t) {
+  applyTheme(t);
+  localStorage.setItem('sg_theme', t);
+  document.getElementById('theme-dark').classList.toggle('selected', t === 'dark');
+  document.getElementById('theme-light').classList.toggle('selected', t === 'light');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+}
+
+// ====== NAVIGATION ======
+function showScreen(name, fromLeft = false) {
+  const prev = document.getElementById(`screen-${currentScreen}`);
+  const next = document.getElementById(`screen-${name}`);
+  if (!next) return;
+  prev.classList.add('hidden');
+  if (fromLeft) next.classList.add('from-left');
+  else next.classList.remove('from-left');
+  next.classList.remove('hidden');
+  currentScreen = name;
+
+  // nav active
+  ['home','history','growth','settings'].forEach(n => {
+    document.getElementById(`nav-${n}`)?.classList.toggle('active', n === name);
+  });
+  document.getElementById('nav').style.display = ['score','result'].includes(name) ? 'none' : 'flex';
+
+  if (name === 'growth') renderGrowth();
+  if (name === 'history') renderHistory();
+}
+function goBack() { showScreen('home', true); }
+
+// ====== HOME ======
+function updateHome() {
+  const today = new Date().toDateString();
+  const todayEntries = history.filter(h => new Date(h.date).toDateString() === today);
+  const best = todayEntries.length ? todayEntries.reduce((a,b) => a.score>b.score?a:b) : null;
+
+  if (best) {
+    document.getElementById('hero-score').textContent = best.score;
+    document.getElementById('hero-sub').textContent = `${best.genre} ・ ${todayEntries.length}枚採点済み`;
+    const badge = document.getElementById('hero-badge');
+    badge.textContent = best.genre; badge.style.display = 'inline-block';
+    if (best.thumb) document.getElementById('hero-bg').style.backgroundImage = `url(${best.thumb})`;
+  }
+
+  const allBest = getBestEntry();
+  if (allBest && allBest.thumb) {
+    document.getElementById('hero-bg').style.backgroundImage = `url(${allBest.thumb})`;
+  }
+
+  document.getElementById('stat-count').textContent = history.length;
+  document.getElementById('stat-best').textContent = allBest ? allBest.score : '--';
+
+  // 継続日数
+  const days = new Set(history.map(h => new Date(h.date).toDateString())).size;
+  document.getElementById('stat-days').textContent = days;
+}
+
+// ====== MODE ======
+function startFreeMode() {
+  currentMode = 'free';
+  currentImageBase64 = null;
+  document.getElementById('odai-section').style.display = 'none';
+  document.getElementById('preview-section').style.display = 'none';
+  document.getElementById('upload-area').style.display = 'block';
+  document.getElementById('file-input').value = '';
+  showScreen('score');
+}
+
+async function startOdaiMode() {
+  currentMode = 'odai';
+  currentImageBase64 = null;
+  document.getElementById('odai-section').style.display = 'block';
+  document.getElementById('preview-section').style.display = 'none';
+  document.getElementById('upload-area').style.display = 'block';
+  document.getElementById('file-input').value = '';
+  document.getElementById('odai-text').textContent = 'お題を生成中...';
+  showScreen('score');
+  await generateOdai();
+}
+
+async function generateOdai() {
+  const apiKey = localStorage.getItem('sg_api_key');
+  if (!apiKey) {
+    document.getElementById('odai-text').textContent = '設定からAPIキーを入力してください';
+    return;
+  }
+  const genre = selectedGenre;
+  const prompt = `あなたは写真のお題を出す先生です。スマホで撮影できる「${genre}」ジャンルのお題を1つ、短く具体的に日本語で出してください。中学生でも挑戦できる内容にしてください。お題だけを1〜2文で答えてください。例：「逆光の中で葉っぱのシルエットを撮ろう」`;
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({contents: [{parts: [{text: prompt}]}]})
+    });
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'お題の生成に失敗しました';
+    currentOdai = text.trim();
+    document.getElementById('odai-text').textContent = currentOdai;
+    document.getElementById('odai-genre').textContent = genre;
+  } catch(e) {
+    document.getElementById('odai-text').textContent = 'お題の生成に失敗しました';
+  }
+}
+
+// ====== GENRE ======
+function selectGenre(el) {
+  document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  selectedGenre = el.dataset.genre;
+  if (currentMode === 'odai') generateOdai();
+}
+
+// ====== FILE UPLOAD ======
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    compressImage(ev.target.result, 1200, 0.85, (compressed) => {
+      currentImageBase64 = compressed.split(',')[1];
+      document.getElementById('preview-section').style.display = 'block';
+      document.getElementById('upload-area').style.display = 'none';
+      document.getElementById('preview-img').src = compressed;
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function compressImage(src, maxSize, quality, callback) {
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    let w = img.width, h = img.height;
+    if (w > maxSize || h > maxSize) {
+      if (w > h) { h = h * maxSize / w; w = maxSize; }
+      else { w = w * maxSize / h; h = maxSize; }
+    }
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    callback(canvas.toDataURL('image/jpeg', quality));
+  };
+  img.src = src;
+}
+
+function compressForStorage(src, callback) {
+  compressImage(src, 400, 0.6, callback);
+}
+
+// ====== ANALYZE ======
+async function analyzePhoto() {
+  const apiKey = localStorage.getItem('sg_api_key');
+  if (!apiKey) { alert('設定からGemini APIキーを入力してください'); return; }
+  if (!currentImageBase64) { alert('写真を選んでください'); return; }
+
+  const btn = document.getElementById('analyze-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg class="spin" style="width:18px;height:18px;vertical-align:middle;margin-right:6px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>採点中...';
+
+  const odaiText = currentMode === 'odai' && currentOdai ? `\nお題：「${currentOdai}」` : '';
+  const prompt = `あなたは写真の先生です。この写真を「${selectedGenre}」ジャンルとして採点してください。${odaiText}
+
+スマホで撮影した写真を想定し、中学生にもわかるやさしい言葉でアドバイスしてください。
+
+以下のJSON形式だけで回答してください（他の文章は不要）：
+{
+  "構図": <0〜20の整数>,
+  "明るさ": <0〜20の整数>,
+  "色彩": <0〜20の整数>,
+  "被写体": <0〜20の整数>,
+  "物語性": <0〜20の整数>,
+  "良かった点": "<具体的に2〜3文で>",
+  "改善ポイント": "<スマホで試せる具体的な方法を2〜3文で>",
+  "次のチャレンジ": "<次に試してほしいこと1文>"
+}`;
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        contents: [{parts: [
+          {inline_data: {mime_type: 'image/jpeg', data: currentImageBase64}},
+          {text: prompt}
+        ]}]
+      })
+    });
+    const data = await res.json();
+    let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    text = text.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(text);
+    showResult(result);
+  } catch(e) {
+    alert('採点に失敗しました。APIキーと通信環境を確認してください。');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'AIに採点してもらう';
+  }
+}
+
+// ====== RESULT ======
+function showResult(result) {
+  const scores = [result['構図'], result['明るさ'], result['色彩'], result['被写体'], result['物語性']];
+  const total = scores.reduce((a,b) => a+b, 0);
+
+  showScreen('result');
+  document.getElementById('result-score').textContent = total;
+  document.getElementById('result-genre-tag').innerHTML = `<span class="tag purple">${selectedGenre}</span>`;
+
+  const resultImg = document.getElementById('result-preview');
+  resultImg.style.cssText = 'margin:0 16px 16px;border-radius:16px;overflow:hidden;height:200px;';
+  resultImg.innerHTML = `<img src="data:image/jpeg;base64,${currentImageBase64}" style="width:100%;height:100%;object-fit:cover;">`;
+
+  scores.forEach((s, i) => {
+    document.getElementById(`val-${i}`).textContent = s;
+    setTimeout(() => {
+      document.getElementById(`bar-${i}`).style.width = `${s/20*100}%`;
+    }, 100 + i*100);
+  });
+
+  const adviceHTML = `
+    <p style="margin-bottom:10px"><strong style="color:var(--green-light)">良かった点</strong><br>${result['良かった点']}</p>
+    <p style="margin-bottom:10px"><strong style="color:var(--purple-light)">改善ポイント</strong><br>${result['改善ポイント']}</p>
+    <p><strong style="color:var(--text2)">次のチャレンジ</strong><br>${result['次のチャレンジ']}</p>
+  `;
+  document.getElementById('advice-content').innerHTML = adviceHTML;
+
+  // サムネ生成（小さく圧縮）
+  const imgSrc = `data:image/jpeg;base64,${currentImageBase64}`;
+  compressForStorage(imgSrc, (thumb) => {
+    const entry = {
+      id: Date.now(),
+      date: new Date().toISOString(),
+      genre: selectedGenre,
+      score: total,
+      scores,
+      thumb,
+      mode: currentMode,
+      odai: currentOdai || null,
+      良かった点: result['良かった点'],
+      改善ポイント: result['改善ポイント'],
+      次のチャレンジ: result['次のチャレンジ']
+    };
+    history.unshift(entry);
+    saveData();
+    updateHome();
+    updateBestBackground();
+  });
+}
+
+function updateBestBackground() {
+  const best = getBestEntry();
+  if (best && best.thumb) {
+    document.getElementById('hero-bg').style.backgroundImage = `url(${best.thumb})`;
+  }
+}
+
+// ====== GROWTH ======
+function renderGrowth() {
+  const sorted = [...history].sort((a,b) => new Date(a.date)-new Date(b.date));
+  const labels = sorted.map(h => {
+    const d = new Date(h.date);
+    return `${d.getMonth()+1}/${d.getDate()}`;
+  });
+  const scores = sorted.map(h => h.score);
+
+  document.getElementById('g-count').textContent = history.length;
+  if (scores.length) {
+    const avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+    document.getElementById('g-avg').textContent = avg;
+    const improve = scores[scores.length-1] - scores[0];
+    document.getElementById('g-improve').textContent = (improve >= 0 ? '+' : '') + improve;
+  }
+
+  // Line chart
+  if (lineChart) lineChart.destroy();
+  const lc = document.getElementById('line-chart');
+  lineChart = new Chart(lc, {
+    type: 'line',
+    data: {
+      labels: labels.length ? labels : ['--'],
+      datasets: [{
+        data: scores.length ? scores : [0],
+        borderColor: '#7F77DD', backgroundColor: 'rgba(127,119,221,0.1)',
+        tension: 0.4, fill: true, pointBackgroundColor: '#7F77DD', pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, plugins: {legend:{display:false}},
+      scales: {
+        x: {ticks:{color:'#9090b0',font:{size:10}}, grid:{color:'rgba(255,255,255,0.05)'}},
+        y: {min:0, max:100, ticks:{color:'#9090b0',font:{size:10}}, grid:{color:'rgba(255,255,255,0.05)'}}
+      }
+    }
+  });
+
+  // Radar chart
+  if (radarChart) radarChart.destroy();
+  let avgScores = [0,0,0,0,0];
+  if (history.length) {
+    history.forEach(h => { h.scores.forEach((s,i) => { avgScores[i] += s; }); });
+    avgScores = avgScores.map(s => Math.round(s/history.length));
+  }
+  const rc = document.getElementById('radar-chart');
+  radarChart = new Chart(rc, {
+    type: 'radar',
+    data: {
+      labels: ['構図','明るさ','色彩','被写体','物語性'],
+      datasets: [{
+        data: avgScores,
+        borderColor: '#7F77DD', backgroundColor: 'rgba(127,119,221,0.2)',
+        pointBackgroundColor: '#7F77DD', pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, plugins: {legend:{display:false}},
+      scales: {r: {min:0, max:20, ticks:{stepSize:5,color:'#9090b0',font:{size:9},backdropColor:'transparent'}, grid:{color:'rgba(255,255,255,0.08)'}, pointLabels:{color:'#9090b0',font:{size:11}}}}
+    }
+  });
+}
+
+// ====== HISTORY ======
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (!history.length) {
+    list.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><p>まだ採点履歴がありません</p></div>`;
+    return;
+  }
+  list.innerHTML = history.map(h => {
+    const d = new Date(h.date);
+    const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+    return `
+      <div class="history-item">
+        <div class="history-thumb">${h.thumb ? `<img src="${h.thumb}">` : ''}</div>
+        <div class="history-info">
+          <h4>${h.genre}${h.mode==='odai'?' ★お題':''}</h4>
+          <p>${dateStr}</p>
+          ${h.次のチャレンジ ? `<p style="font-size:10px;color:var(--text3);margin-top:2px">${h.次のチャレンジ}</p>` : ''}
+        </div>
+        <div class="history-score">${h.score}</div>
+      </div>`;
+  }).join('');
+}
+
+// ====== CLEAR DATA ======
+function clearData() {
+  if (confirm('全ての履歴を削除しますか？')) {
+    history = [];
+    saveData();
+    updateHome();
+  }
+}
+</script>
+</body>
+</html>
