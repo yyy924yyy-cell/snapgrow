@@ -1,4 +1,4 @@
-const CACHE = 'snapgrow-v1';
+const CACHE = 'snapgrow-v3';
 const ASSETS = [
   './',
   './index.html',
