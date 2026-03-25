@@ -597,8 +597,14 @@ let radarChart = null;
 
 // ====== INIT ======
 window.addEventListener('load', () => {
+  // 古いService Workerを全て削除してキャッシュをクリア
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(reg => reg.unregister());
+    });
+    caches.keys().then(keys => {
+      keys.forEach(key => caches.delete(key));
+    });
   }
   loadData();
   applyTheme(localStorage.getItem('sg_theme') || 'dark');
