@@ -88,7 +88,7 @@
 
   /* HEADER */
   .screen-header {
-    padding: 56px 20px 16px;
+    padding: calc(env(safe-area-inset-top) + 16px) 20px 16px;
     position: sticky; top: 0; z-index: 10;
     background: var(--bg);
   }
@@ -150,6 +150,7 @@
     border: 0.5px solid var(--border);
   }
   .score-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--card-r); }
+  #result-preview { margin: 0 16px 16px; border-radius: 16px; overflow: hidden; height: 200px; }
   .score-preview-placeholder { color: var(--text3); font-size: 13px; text-align: center; }
   .score-total { text-align: center; margin: 0 16px 16px; }
   .score-total .big { font-family: 'Space Mono', monospace; font-size: 56px; font-weight: 700; color: var(--purple-light); line-height: 1; }
@@ -215,7 +216,7 @@
   .back-btn {
     display: flex; align-items: center; gap: 6px;
     font-size: 14px; color: var(--text2); cursor: pointer; padding: 0 16px;
-    margin-bottom: 16px; margin-top: 52px;
+    margin-bottom: 16px; margin-top: calc(env(safe-area-inset-top) + 16px);
     background: none; border: none; font-family: 'DM Sans', sans-serif;
   }
   .back-btn svg { width: 18px; height: 18px; }
@@ -443,7 +444,7 @@
 
   <!-- RESULT SCREEN -->
   <div id="screen-result" class="screen hidden">
-    <button class="back-btn" onclick="showScreen('score')">
+    <button class="back-btn" onclick="resetScoreScreen(); showScreen('score')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
       もう一枚
     </button>
@@ -492,7 +493,7 @@
       <div id="advice-content"><div class="advice-loading"><div class="dots"><span>●</span><span>●</span><span>●</span></div></div></div>
     </div>
 
-    <button class="btn-primary" style="margin-bottom:20px" onclick="startFreeMode()">もう一枚採点する</button>
+    <button class="btn-primary" style="margin-bottom:20px" onclick="currentMode==='odai'?startOdaiMode():startFreeMode()">もう一枚採点する</button>
   </div>
 
   <!-- GROWTH SCREEN -->
@@ -596,6 +597,9 @@ let radarChart = null;
 
 // ====== INIT ======
 window.addEventListener('load', () => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
   loadData();
   applyTheme(localStorage.getItem('sg_theme') || 'dark');
   const apiKey = localStorage.getItem('sg_api_key');
@@ -616,8 +620,23 @@ function loadData() {
   const raw = localStorage.getItem('sg_history');
   history = raw ? JSON.parse(raw) : [];
 }
+function resetScoreScreen() {
+  currentImageBase64 = null;
+  document.getElementById('preview-section').style.display = 'none';
+  document.getElementById('upload-area').style.display = 'block';
+  document.getElementById('upload-area').style.opacity = '1';
+  document.getElementById('upload-area').style.pointerEvents = 'auto';
+  document.getElementById('file-input').value = '';
+}
+
 function saveData() {
-  localStorage.setItem('sg_history', JSON.stringify(history));
+  try {
+    localStorage.setItem('sg_history', JSON.stringify(history));
+  } catch(e) {
+    // LocalStorage満杯時は古い履歴を削除して再試行
+    history = history.slice(0, 20);
+    try { localStorage.setItem('sg_history', JSON.stringify(history)); } catch(e2) {}
+  }
 }
 function saveApiKey() {
   localStorage.setItem('sg_api_key', document.getElementById('api-key-input').value);
@@ -658,7 +677,14 @@ function showScreen(name, fromLeft = false) {
   if (name === 'growth') renderGrowth();
   if (name === 'history') renderHistory();
 }
-function goBack() { showScreen('home', true); }
+function goBack() {
+  currentOdai = null;
+  currentImageBase64 = null;
+  document.getElementById('preview-section').style.display = 'none';
+  document.getElementById('upload-area').style.display = 'block';
+  document.getElementById('file-input').value = '';
+  showScreen('home', true);
+}
 
 // ====== HOME ======
 function updateHome() {
@@ -691,6 +717,7 @@ function updateHome() {
 function startFreeMode() {
   currentMode = 'free';
   currentImageBase64 = null;
+  resetGenre();
   document.getElementById('odai-section').style.display = 'none';
   document.getElementById('preview-section').style.display = 'none';
   document.getElementById('upload-area').style.display = 'block';
@@ -701,6 +728,7 @@ function startFreeMode() {
 async function startOdaiMode() {
   currentMode = 'odai';
   currentImageBase64 = null;
+  resetGenre();
   document.getElementById('odai-section').style.display = 'block';
   document.getElementById('preview-section').style.display = 'none';
   document.getElementById('upload-area').style.display = 'block';
@@ -710,12 +738,21 @@ async function startOdaiMode() {
   await generateOdai();
 }
 
+function resetGenre() {
+  selectedGenre = '風景・自然';
+  document.querySelectorAll('.genre-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+}
+
 async function generateOdai() {
   const apiKey = localStorage.getItem('sg_api_key');
   if (!apiKey) {
     document.getElementById('odai-text').textContent = '設定からAPIキーを入力してください';
+    document.getElementById('upload-area').style.opacity = '0.4';
+    document.getElementById('upload-area').style.pointerEvents = 'none';
     return;
   }
+  document.getElementById('upload-area').style.opacity = '1';
+  document.getElementById('upload-area').style.pointerEvents = 'auto';
   const genre = selectedGenre;
   const prompt = `あなたは写真のお題を出す先生です。スマホで撮影できる「${genre}」ジャンルのお題を1つ、短く具体的に日本語で出してください。中学生でも挑戦できる内容にしてください。お題だけを1〜2文で答えてください。例：「逆光の中で葉っぱのシルエットを撮ろう」`;
   try {
@@ -760,6 +797,7 @@ function handleFile(e) {
 
 function compressImage(src, maxSize, quality, callback) {
   const img = new Image();
+  img.onerror = () => callback(src); // 失敗時は元画像をそのまま使用
   img.onload = () => {
     const canvas = document.createElement('canvas');
     let w = img.width, h = img.height;
@@ -829,8 +867,7 @@ async function analyzePhoto() {
   } finally {
     btn.disabled = false;
     btn.textContent = 'AIに採点してもらう';
-  }
-}
+  }}
 
 // ====== RESULT ======
 function showResult(result) {
@@ -842,9 +879,7 @@ function showResult(result) {
   document.getElementById('result-genre-tag').innerHTML = `<span class="tag purple">${selectedGenre}</span>`;
 
   const resultImg = document.getElementById('result-preview');
-  resultImg.style.cssText = 'margin:0 16px 16px;border-radius:16px;overflow:hidden;height:200px;';
-  resultImg.innerHTML = `<img src="data:image/jpeg;base64,${currentImageBase64}" style="width:100%;height:100%;object-fit:cover;">`;
-
+  resultImg.innerHTML = `<img src="data:image/jpeg;base64,${currentImageBase64}" alt="採点写真">`;
   scores.forEach((s, i) => {
     document.getElementById(`val-${i}`).textContent = s;
     setTimeout(() => {
@@ -876,6 +911,7 @@ function showResult(result) {
       次のチャレンジ: result['次のチャレンジ']
     };
     history.unshift(entry);
+    if (history.length > 50) history = history.slice(0, 50); // 上限50件
     saveData();
     updateHome();
     updateBestBackground();
@@ -909,12 +945,15 @@ function renderGrowth() {
   // Line chart
   if (lineChart) lineChart.destroy();
   const lc = document.getElementById('line-chart');
+  if (!scores.length) {
+    lc.parentElement.innerHTML = '<div class="card-label">総合スコア推移</div><p style="color:var(--text3);font-size:13px;text-align:center;padding:20px 0">採点するとグラフが表示されます</p>';
+  } else {
   lineChart = new Chart(lc, {
     type: 'line',
     data: {
-      labels: labels.length ? labels : ['--'],
+      labels,
       datasets: [{
-        data: scores.length ? scores : [0],
+        data: scores,
         borderColor: '#7F77DD', backgroundColor: 'rgba(127,119,221,0.1)',
         tension: 0.4, fill: true, pointBackgroundColor: '#7F77DD', pointRadius: 4
       }]
@@ -922,11 +961,12 @@ function renderGrowth() {
     options: {
       responsive: true, plugins: {legend:{display:false}},
       scales: {
-        x: {ticks:{color:'#9090b0',font:{size:10}}, grid:{color:'rgba(255,255,255,0.05)'}},
-        y: {min:0, max:100, ticks:{color:'#9090b0',font:{size:10}}, grid:{color:'rgba(255,255,255,0.05)'}}
+        x: {ticks:{color:'#9090b0',font:{size:10}}, grid:{color: document.documentElement.getAttribute('data-theme')==='light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)'}},
+        y: {min:0, max:100, ticks:{color:'#9090b0',font:{size:10}}, grid:{color: document.documentElement.getAttribute('data-theme')==='light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)'}}
       }
     }
   });
+  }
 
   // Radar chart
   if (radarChart) radarChart.destroy();
@@ -948,7 +988,7 @@ function renderGrowth() {
     },
     options: {
       responsive: true, plugins: {legend:{display:false}},
-      scales: {r: {min:0, max:20, ticks:{stepSize:5,color:'#9090b0',font:{size:9},backdropColor:'transparent'}, grid:{color:'rgba(255,255,255,0.08)'}, pointLabels:{color:'#9090b0',font:{size:11}}}}
+      scales: {r: {min:0, max:20, ticks:{stepSize:5,color:'#9090b0',font:{size:9},backdropColor:'transparent'}, grid:{color: document.documentElement.getAttribute('data-theme')==='light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}, pointLabels:{color:'#9090b0',font:{size:11}}}}
     }
   });
 }
