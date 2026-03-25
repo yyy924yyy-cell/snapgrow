@@ -817,9 +817,12 @@ async function analyzePhoto() {
       })
     });
     const data = await res.json();
+    if (data.error) throw new Error('API Error: ' + data.error.message);
     let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    text = text.replace(/```json|```/g, '').trim();
-    const result = JSON.parse(text);
+    // JSON部分だけ抽出
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('AIの返答からJSONを取得できませんでした');
+    const result = JSON.parse(jsonMatch[0]);
     showResult(result);
   } catch(e) {
     alert('採点に失敗しました。\n\nエラー：' + e.message + '\n\n設定画面でAPIキーを確認してください。');
