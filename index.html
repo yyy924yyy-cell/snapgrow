@@ -535,10 +535,10 @@
       <h1>設定</h1>
     </div>
 
-    <p class="section-title">Claude APIキー</p>
+    <p class="section-title">OpenRouter APIキー</p>
     <div style="margin: 0 16px 16px;">
-      <input class="api-input" id="api-key-input" type="password" placeholder="sk-ant-... で始まるキーを入力" oninput="saveApiKey()">
-      <p style="font-size:11px;color:var(--text3);margin-top:6px;">Anthropic ConsoleのAPIキー（sk-ant-...）を入力してください</p>
+      <input class="api-input" id="api-key-input" type="password" placeholder="sk-or-... で始まるキーを入力" oninput="saveApiKey()">
+      <p style="font-size:11px;color:var(--text3);margin-top:6px;">OpenRouterのAPIキー（sk-or-...）を入力してください</p>
     </div>
 
     <p class="section-title">外観</p>
@@ -762,23 +762,21 @@ async function generateOdai() {
   const genre = selectedGenre;
   const prompt = `あなたは写真のお題を出す先生です。スマホで撮影できる「${genre}」ジャンルのお題を1つ、短く具体的に日本語で出してください。中学生でも挑戦できる内容にしてください。お題だけを1〜2文で答えてください。例：「逆光の中で葉っぱのシルエットを撮ろう」`;
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'qwen/qwen2.5-vl-72b-instruct:free',
         max_tokens: 256,
         messages: [{role: 'user', content: prompt}]
       })
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error.message);
-    const text = data.content?.[0]?.text || 'お題の生成に失敗しました';
+    const text = data.choices?.[0]?.message?.content || 'お題の生成に失敗しました';
     currentOdai = text.trim();
     document.getElementById('odai-text').textContent = currentOdai;
     document.getElementById('odai-genre').textContent = genre;
@@ -835,7 +833,7 @@ function compressForStorage(src, callback) {
 // ====== ANALYZE ======
 async function analyzePhoto() {
   const apiKey = localStorage.getItem('sg_api_key');
-  if (!apiKey) { alert('設定からClaude APIキーを入力してください'); return; }
+  if (!apiKey) { alert('設定からOpenRouter APIキーを入力してください'); return; }
   if (!currentImageBase64) { alert('写真を選んでください'); return; }
 
   const btn = document.getElementById('analyze-btn');
@@ -860,21 +858,19 @@ async function analyzePhoto() {
 }`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'qwen/qwen2.5-vl-72b-instruct:free',
         max_tokens: 1024,
         messages: [{
           role: 'user',
           content: [
-            {type: 'image', source: {type: 'base64', media_type: 'image/jpeg', data: currentImageBase64}},
+            {type: 'image_url', image_url: {url: `data:image/jpeg;base64,${currentImageBase64}`}},
             {type: 'text', text: prompt}
           ]
         }]
@@ -882,7 +878,7 @@ async function analyzePhoto() {
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error.message);
-    let text = data.content?.[0]?.text || '';
+    let text = data.choices?.[0]?.message?.content || '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('AIの返答からJSONを取得できませんでした');
     const result = JSON.parse(jsonMatch[0]);
