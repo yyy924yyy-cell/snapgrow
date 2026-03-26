@@ -542,7 +542,7 @@
         <button class="btn-primary" style="margin:0;padding:10px 16px;font-size:13px;" onclick="saveApiKeyBtn()">保存する</button>
         <span id="save-status" style="font-size:12px;color:var(--green-light);display:none;">✓ 保存済み</span>
       </div>
-      <p style="font-size:11px;color:var(--text3);margin-top:8px;">入力して「保存する」を押してください</p>
+      <p style="font-size:11px;color:var(--text3);margin-top:8px;">入力して「保存する」を押してください。※ file:// 直開きではAPI通信に失敗することがあります</p>
     </div>
 
     <p class="section-title">外観</p>
@@ -558,7 +558,7 @@
 
     <p class="section-title">アプリ情報</p>
     <div class="setting-row">
-      <div class="info"><h4>バージョン</h4><p>1.0.0</p></div>
+      <div class="info"><h4>バージョン</h4><p>1.0.1</p></div>
     </div>
     <div class="setting-row" style="cursor:pointer" onclick="clearData()">
       <div class="info"><h4 style="color:#e24b4a">データをリセット</h4><p>全ての履歴を削除します</p></div>
@@ -598,6 +598,93 @@ let currentOdai = null;
 let history = [];
 let lineChart = null;
 let radarChart = null;
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+function isHttpOrigin() {
+  return location.protocol === 'http:' || location.protocol === 'https:';
+}
+
+function assertRunnableOrigin() {
+  if (location.protocol === 'file:') {
+    throw new Error('このHTMLをファイル直開き(file://)しているため、API通信が失敗する可能性があります。GitHub Pages か http://localhost などのローカルサーバー経由で開いてください。');
+  }
+}
+
+function getOpenRouterHeaders(apiKey) {
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`
+  };
+
+  if (isHttpOrigin()) {
+    headers['HTTP-Referer'] = location.href;
+    headers['X-OpenRouter-Title'] = 'SnapGrow';
+  }
+
+  return headers;
+}
+
+function normalizeMessageContent(content) {
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) {
+    return content.map(part => {
+      if (typeof part === 'string') return part;
+      if (part?.type === 'text') return part.text || '';
+      return '';
+    }).join('
+').trim();
+  }
+  return '';
+}
+
+async function callOpenRouterWithFallback({ apiKey, models, messages, max_tokens = 1024, temperature }) {
+  assertRunnableOrigin();
+
+  let lastError = null;
+
+  for (const model of models) {
+    try {
+      const body = {
+        model,
+        messages,
+        max_tokens,
+        stream: false
+      };
+
+      if (typeof temperature === 'number') body.temperature = temperature;
+
+      const res = await fetch(OPENROUTER_URL, {
+        method: 'POST',
+        headers: getOpenRouterHeaders(apiKey),
+        body: JSON.stringify(body)
+      });
+
+      const raw = await res.text();
+      let data = null;
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch {
+        throw Object.assign(new Error(`[${model}] HTTP ${res.status}: ${raw.slice(0, 300) || 'レスポンスが空でした'}`), { status: res.status });
+      }
+
+      if (!res.ok) {
+        const msg = data?.error?.message || data?.message || `HTTP ${res.status}`;
+        throw Object.assign(new Error(`[${model}] ${msg}`), { status: res.status, data });
+      }
+
+      if (data?.error) {
+        throw Object.assign(new Error(`[${model}] ${data.error.message || 'APIエラー'}`), { status: res.status, data });
+      }
+
+      return data;
+    } catch (err) {
+      lastError = err;
+      if ([401, 402, 403].includes(err?.status)) break;
+    }
+  }
+
+  throw lastError || new Error('OpenRouter APIの呼び出しに失敗しました');
+}
 
 // ====== INIT ======
 window.addEventListener('load', () => {
@@ -769,30 +856,27 @@ async function generateOdai() {
     document.getElementById('upload-area').style.pointerEvents = 'none';
     return;
   }
+
   document.getElementById('upload-area').style.opacity = '1';
   document.getElementById('upload-area').style.pointerEvents = 'auto';
+
   const genre = selectedGenre;
   const prompt = `あなたは写真のお題を出す先生です。スマホで撮影できる「${genre}」ジャンルのお題を1つ、短く具体的に日本語で出してください。中学生でも挑戦できる内容にしてください。お題だけを1〜2文で答えてください。例：「逆光の中で葉っぱのシルエットを撮ろう」`;
+
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: 'openrouter/free',
-        max_tokens: 256,
-        messages: [{role: 'user', content: prompt}]
-      })
+    const data = await callOpenRouterWithFallback({
+      apiKey,
+      models: ['openrouter/free', 'mistralai/mistral-small-3.1-24b-instruct:free'],
+      max_tokens: 256,
+      temperature: 0.7,
+      messages: [{ role: 'user', content: prompt }]
     });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    const text = data.choices?.[0]?.message?.content || 'お題の生成に失敗しました';
+
+    const text = normalizeMessageContent(data?.choices?.[0]?.message?.content) || 'お題の生成に失敗しました';
     currentOdai = text.trim();
     document.getElementById('odai-text').textContent = currentOdai;
     document.getElementById('odai-genre').textContent = genre;
-  } catch(e) {
+  } catch (e) {
     document.getElementById('odai-text').textContent = 'お題の生成に失敗しました：' + e.message;
   }
 }
