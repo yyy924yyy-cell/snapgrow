@@ -233,6 +233,21 @@
     transition: all var(--transition);
   }
   .history-item:active { transform: scale(0.98); }
+  .history-modal-overlay {
+    position: fixed; inset: 0; z-index: 300;
+    background: rgba(0,0,0,0.8); display: flex; align-items: flex-end;
+    transition: opacity 0.25s ease;
+  }
+  .history-modal-overlay.hidden { opacity: 0; pointer-events: none; }
+  .history-modal {
+    background: var(--bg2); border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 430px; margin: 0 auto;
+    max-height: 85vh; overflow-y: auto;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    transform: translateY(0); transition: transform 0.25s ease;
+  }
+  .history-modal-overlay.hidden .history-modal { transform: translateY(100%); }
+  .history-modal-img { width: 100%; border-radius: 12px; object-fit: cover; max-height: 220px; margin-bottom: 12px; }
   .history-thumb {
     width: 52px; height: 52px; border-radius: 8px;
     background: var(--bg3); flex-shrink: 0; overflow: hidden;
@@ -412,9 +427,11 @@
 
     <div id="odai-section" style="display:none">
       <div class="odai-card">
-        <div class="odai-label">✦ 今日のお題</div>
-        <div class="odai-text" id="odai-text">お題を生成中...</div>
-        <div class="odai-genre" id="odai-genre"></div>
+        <div class="odai-label">✦ お題を選ぶ</div>
+        <div id="odai-choices" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
+        <button onclick="refreshOdaiChoices()" style="width:100%;padding:8px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--font-sans)">
+          🔄 別のお題を表示する
+        </button>
       </div>
     </div>
 
@@ -446,7 +463,7 @@
   <div id="screen-result" class="screen hidden">
     <button class="back-btn" onclick="resetScoreScreen(); showScreen('score')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-      もう一枚
+      戻る
     </button>
 
     <div class="score-preview" id="result-preview"></div>
@@ -493,7 +510,7 @@
       <div id="advice-content"><div class="advice-loading"><div class="dots"><span>●</span><span>●</span><span>●</span></div></div></div>
     </div>
 
-    <button class="btn-primary" style="margin-bottom:20px" onclick="currentMode==='odai'?startOdaiMode():startFreeMode()">もう一枚採点する</button>
+    <button class="btn-primary" style="margin-bottom:20px" onclick="resetScoreScreen(); showScreen('score')">戻る</button>
   </div>
 
   <!-- GROWTH SCREEN -->
@@ -507,6 +524,10 @@
       <div class="stat-card"><div class="val" id="g-count">0</div><div class="lbl">採点回数</div></div>
       <div class="stat-card"><div class="val" id="g-avg">--</div><div class="lbl">平均スコア</div></div>
       <div class="stat-card" style="color:var(--green-light)"><div class="val" id="g-improve">+0</div><div class="lbl">スコア向上</div></div>
+    </div>
+    <div class="card" id="growth-summary-card" style="margin:0 16px 12px;">
+      <div class="card-label">成長のポイント</div>
+      <div id="growth-summary" style="font-size:13px;color:var(--text2);line-height:1.7;">採点するとここに成長のポイントが表示されます</div>
     </div>
 
     <div class="card chart-card">
@@ -562,6 +583,31 @@
     </div>
     <div class="setting-row" style="cursor:pointer" onclick="clearData()">
       <div class="info"><h4 style="color:#e24b4a">データをリセット</h4><p>全ての履歴を削除します</p></div>
+    </div>
+  </div>
+
+  <!-- HISTORY DETAIL MODAL -->
+  <div class="history-modal-overlay hidden" id="history-modal-overlay" onclick="closeHistoryModal(event)">
+    <div class="history-modal">
+      <div class="modal-handle"></div>
+      <img id="modal-img" class="history-modal-img" src="" alt="">
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px;">
+        <span style="font-family:'Space Mono',monospace;font-size:36px;font-weight:700;color:var(--purple-light)" id="modal-score">--</span>
+        <span style="font-size:13px;color:var(--text2)">/ 100</span>
+        <span id="modal-tag" style="margin-left:4px"></span>
+      </div>
+      <p id="modal-date" style="font-size:11px;color:var(--text3);margin-bottom:12px;"></p>
+      <div class="card" style="margin:0 0 10px;">
+        <div class="card-label">項目別スコア</div>
+        <div id="modal-bars"></div>
+      </div>
+      <div class="advice-card" id="modal-advice-card">
+        <div class="advice-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <span>AIアドバイス</span>
+        </div>
+        <div id="modal-advice"></div>
+      </div>
     </div>
   </div>
 
@@ -737,6 +783,132 @@ function saveData() {
 function saveApiKey() {
   localStorage.setItem('sg_api_key', document.getElementById('api-key-input').value.trim());
 }
+
+// ====== お題選択式 ======
+const ODAI_BANK = {
+  '風景・自然': [
+    '空と雲だけを主役にした写真を撮ろう',
+    '木の葉や花をアップで撮ってみよう',
+    '水たまりや川の反射を使った写真を撮ろう',
+    '夕暮れや朝の光を使った写真に挑戦しよう',
+    '影や光のコントラストを意識して撮ろう',
+    '身近な植物や草花を主役にしよう',
+    '空を背景に何かをシルエットで撮ろう',
+  ],
+  'ポートレート': [
+    '笑顔の瞬間を自然に撮ってみよう',
+    '後ろ姿や横顔を撮ってみよう',
+    '手や足など体の一部をアップで撮ろう',
+    '窓からの光を使って人を撮ろう',
+    '人物と背景のボケ感を意識して撮ろう',
+    '動いている瞬間をとらえてみよう',
+  ],
+  '街・スナップ': [
+    '看板や文字が入った街の風景を撮ろう',
+    '人が少ない早朝の街を撮ってみよう',
+    '建物の形や模様をアップで撮ろう',
+    '自転車や乗り物を主役にしよう',
+    '商店街やお店の雰囲気を切り取ろう',
+    '階段や橋などの構造物を面白く撮ろう',
+    '道路や歩道のラインを使った構図を試そう',
+  ]
+};
+
+let currentOdaiChoices = [];
+let selectedOdaiIndex = -1;
+
+function renderOdaiChoices() {
+  const bank = ODAI_BANK[selectedGenre] || ODAI_BANK['風景・自然'];
+  const shuffled = [...bank].sort(() => Math.random() - 0.5).slice(0, 4);
+  currentOdaiChoices = shuffled;
+  selectedOdaiIndex = -1;
+  currentOdai = null;
+  const container = document.getElementById('odai-choices');
+  container.innerHTML = shuffled.map((odai, i) => `
+    <div onclick="selectOdai(${i})" id="odai-choice-${i}" style="
+      padding:12px 14px;border-radius:12px;border:0.5px solid var(--border);
+      background:var(--bg3);cursor:pointer;font-size:13px;color:var(--text);
+      transition:all 0.2s;line-height:1.5;
+    ">${odai}</div>
+  `).join('');
+}
+
+function selectOdai(i) {
+  selectedOdaiIndex = i;
+  currentOdai = currentOdaiChoices[i];
+  currentOdaiChoices.forEach((_, idx) => {
+    const el = document.getElementById('odai-choice-' + idx);
+    if (!el) return;
+    el.style.background = idx === i ? 'var(--purple-dark)' : 'var(--bg3)';
+    el.style.borderColor = idx === i ? 'var(--purple)' : 'var(--border)';
+    el.style.color = idx === i ? 'var(--purple-light)' : 'var(--text)';
+  });
+}
+
+function refreshOdaiChoices() {
+  renderOdaiChoices();
+}
+
+// ====== 履歴詳細モーダル ======
+function openHistoryModal(entry) {
+  document.getElementById('modal-img').src = entry.thumb || '';
+  document.getElementById('modal-score').textContent = entry.score;
+  document.getElementById('modal-tag').innerHTML = `<span class="tag purple">${entry.genre}</span>${entry.mode==='odai'?' <span class="tag green">お題</span>':''}`;
+  const d = new Date(entry.date);
+  document.getElementById('modal-date').textContent = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const labels = ['構図','明るさ','色彩','被写体','物語性'];
+  document.getElementById('modal-bars').innerHTML = (entry.scores||[]).map((s,i) => `
+    <div class="item-row">
+      <span class="item-label">${labels[i]}</span>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${s/20*100}%"></div></div>
+      <span class="item-val">${s}</span>
+    </div>
+  `).join('');
+  const iphoneHint = entry.iPhone操作ヒント || '';
+  document.getElementById('modal-advice').innerHTML = `
+    <p style="margin-bottom:10px"><strong style="color:var(--green-light)">良かった点</strong><br>${entry.良かった点||'-'}</p>
+    <p style="margin-bottom:10px"><strong style="color:var(--purple-light)">改善ポイント</strong><br>${entry.改善ポイント||'-'}</p>
+    ${iphoneHint ? `<p style="margin-bottom:10px;background:rgba(127,119,221,0.08);border-radius:10px;padding:10px;"><strong style="color:var(--purple-light)">📱 iPhoneカメラのヒント</strong><br>${iphoneHint}</p>` : ''}
+    <p><strong style="color:var(--text2)">次のチャレンジ</strong><br>${entry.次のチャレンジ||'-'}</p>
+  `;
+  const overlay = document.getElementById('history-modal-overlay');
+  overlay.classList.remove('hidden');
+}
+
+function closeHistoryModal(e) {
+  if (e.target === document.getElementById('history-modal-overlay')) {
+    document.getElementById('history-modal-overlay').classList.add('hidden');
+  }
+}
+
+// ====== 成長サマリー ======
+function calcGrowthSummary() {
+  if (history.length < 2) return '採点を重ねると成長のポイントが表示されます。';
+  const recent = history.slice(0, Math.min(5, history.length));
+  const old = history.slice(-Math.min(5, history.length));
+  const labels = ['構図','明るさ','色彩','被写体','物語性'];
+  const recentAvg = labels.map((_, i) => recent.reduce((s,h) => s+(h.scores?.[i]||0), 0) / recent.length);
+  const oldAvg = labels.map((_, i) => old.reduce((s,h) => s+(h.scores?.[i]||0), 0) / old.length);
+  const diffs = labels.map((l, i) => ({ label: l, diff: recentAvg[i] - oldAvg[i] }));
+  const improved = diffs.filter(d => d.diff > 0.5).sort((a,b) => b.diff - a.diff);
+  const weakest = diffs.sort((a,b) => a.diff - b.diff)[0];
+  let summary = '';
+  if (improved.length > 0) {
+    summary += `<span style="color:var(--green-light)">📈 最近伸びているのは「${improved.map(d=>d.label).join('・')}」です！</span><br>`;
+  }
+  const totalRecent = recent.reduce((s,h)=>s+h.score,0)/recent.length;
+  const totalOld = old.reduce((s,h)=>s+h.score,0)/old.length;
+  const totalDiff = Math.round(totalRecent - totalOld);
+  if (totalDiff > 0) {
+    summary += `<span style="color:var(--purple-light)">総合スコアが平均${totalDiff}点アップしています！</span><br>`;
+  } else if (totalDiff < 0) {
+    summary += `<span style="color:var(--text2)">総合スコアはまだ伸びしろがあります。</span><br>`;
+  }
+  if (weakest && weakest.diff < -0.3) {
+    summary += `<span style="color:var(--text2)">💡「${weakest.label}」を意識して練習するとさらに上達しそうです。</span>`;
+  }
+  return summary || '着実に上達しています！この調子で続けよう。';
+}
 function saveApiKeyBtn() {
   const key = document.getElementById('api-key-input').value.trim();
   if (!key) { alert('APIキーを入力してください'); return; }
@@ -837,9 +1009,8 @@ async function startOdaiMode() {
   document.getElementById('preview-section').style.display = 'none';
   document.getElementById('upload-area').style.display = 'block';
   document.getElementById('file-input').value = '';
-  document.getElementById('odai-text').textContent = 'お題を生成中...';
   showScreen('score');
-  await generateOdai();
+  renderOdaiChoices();
 }
 
 function resetGenre() {
@@ -885,7 +1056,7 @@ function selectGenre(el) {
   document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   selectedGenre = el.dataset.genre;
-  if (currentMode === 'odai') generateOdai();
+  if (currentMode === 'odai') renderOdaiChoices();
 }
 
 // ====== FILE UPLOAD ======
@@ -937,6 +1108,7 @@ async function analyzePhoto() {
   btn.innerHTML = '<svg class="spin" style="width:18px;height:18px;vertical-align:middle;margin-right:6px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>採点中...';
 
   const odaiText = currentMode === 'odai' && currentOdai ? `\nお題：「${currentOdai}」` : '';
+  if (currentMode === 'odai' && !currentOdai) { alert('お題を選んでください'); btn.disabled=false; btn.textContent='AIに採点してもらう'; return; }
   const prompt = `あなたは写真の先生です。この写真を「${selectedGenre}」ジャンルとして採点してください。${odaiText}
 
 スマホで撮影した写真を想定し、中学生にもわかるやさしい言葉でアドバイスしてください。
@@ -948,8 +1120,9 @@ async function analyzePhoto() {
   "色彩": <0〜20の整数>,
   "被写体": <0〜20の整数>,
   "物語性": <0〜20の整数>,
-  "良かった点": "<具体的に2〜3文で>",
-  "改善ポイント": "<スマホで試せる具体的な方法を2〜3文で>",
+  "良かった点": "<まず褒める。具体的に2〜3文で>",
+  "改善ポイント": "<具体的な改善内容を2〜3文で>",
+  "iPhone操作ヒント": "<iPhoneカメラの具体的な操作方法。例：画面をタップしてピントを合わせる、タップ後に太陽マークを上下にスライドして明るさを調整するなど。2文>",
   "次のチャレンジ": "<次に試してほしいこと1文>"
 }`;
 
@@ -1000,9 +1173,11 @@ function showResult(result) {
     }, 100 + i*100);
   });
 
+  const iphoneHint = result['iPhone操作ヒント'] || '';
   const adviceHTML = `
     <p style="margin-bottom:10px"><strong style="color:var(--green-light)">良かった点</strong><br>${result['良かった点']}</p>
     <p style="margin-bottom:10px"><strong style="color:var(--purple-light)">改善ポイント</strong><br>${result['改善ポイント']}</p>
+    ${iphoneHint ? `<p style="margin-bottom:10px;background:rgba(127,119,221,0.08);border-radius:10px;padding:10px;"><strong style="color:var(--purple-light)">📱 iPhoneカメラのヒント</strong><br>${iphoneHint}</p>` : ''}
     <p><strong style="color:var(--text2)">次のチャレンジ</strong><br>${result['次のチャレンジ']}</p>
   `;
   document.getElementById('advice-content').innerHTML = adviceHTML;
@@ -1021,10 +1196,16 @@ function showResult(result) {
       odai: currentOdai || null,
       良かった点: result['良かった点'],
       改善ポイント: result['改善ポイント'],
+      'iPhone操作ヒント': result['iPhone操作ヒント'] || '',
       次のチャレンジ: result['次のチャレンジ']
     };
     history.unshift(entry);
-    if (history.length > 50) history = history.slice(0, 50); // 上限50件
+    // 上限100件・スコア低い順に削除
+    if (history.length > 100) {
+      history.sort((a, b) => b.score - a.score);
+      history = history.slice(0, 100);
+      history.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
     saveData();
     updateHome();
     updateBestBackground();
@@ -1048,6 +1229,7 @@ function renderGrowth() {
   const scores = sorted.map(h => h.score);
 
   document.getElementById('g-count').textContent = history.length;
+  document.getElementById('growth-summary').innerHTML = calcGrowthSummary();
   if (scores.length) {
     const avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
     document.getElementById('g-avg').textContent = avg;
@@ -1117,7 +1299,7 @@ function renderHistory() {
     const d = new Date(h.date);
     const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
     return `
-      <div class="history-item">
+      <div class="history-item" onclick="openHistoryModal(history[idx])">
         <div class="history-thumb">${h.thumb ? `<img src="${h.thumb}">` : ''}</div>
         <div class="history-info">
           <h4>${h.genre}${h.mode==='odai'?' ★お題':''}</h4>
