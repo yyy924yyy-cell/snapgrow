@@ -781,7 +781,7 @@ async function generateOdai() {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-exp:free',
+        model: 'openrouter/free',
         max_tokens: 256,
         messages: [{role: 'user', content: prompt}]
       })
