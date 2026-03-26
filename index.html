@@ -537,8 +537,12 @@
 
     <p class="section-title">OpenRouter APIキー</p>
     <div style="margin: 0 16px 16px;">
-      <input class="api-input" id="api-key-input" type="password" placeholder="sk-or-... で始まるキーを入力" oninput="saveApiKey()">
-      <p style="font-size:11px;color:var(--text3);margin-top:6px;">OpenRouterのAPIキー（sk-or-...）を入力してください</p>
+      <input class="api-input" id="api-key-input" type="text" placeholder="sk-or-... で始まるキーを入力">
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+        <button class="btn-primary" style="margin:0;padding:10px 16px;font-size:13px;" onclick="saveApiKeyBtn()">保存する</button>
+        <span id="save-status" style="font-size:12px;color:var(--green-light);display:none;">✓ 保存済み</span>
+      </div>
+      <p style="font-size:11px;color:var(--text3);margin-top:8px;">入力して「保存する」を押してください</p>
     </div>
 
     <p class="section-title">外観</p>
@@ -645,7 +649,15 @@ function saveData() {
   }
 }
 function saveApiKey() {
-  localStorage.setItem('sg_api_key', document.getElementById('api-key-input').value);
+  localStorage.setItem('sg_api_key', document.getElementById('api-key-input').value.trim());
+}
+function saveApiKeyBtn() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) { alert('APIキーを入力してください'); return; }
+  localStorage.setItem('sg_api_key', key);
+  const status = document.getElementById('save-status');
+  status.style.display = 'inline';
+  setTimeout(() => status.style.display = 'none', 3000);
 }
 function getBestEntry() {
   if (!history.length) return null;
@@ -833,6 +845,7 @@ function compressForStorage(src, callback) {
 // ====== ANALYZE ======
 async function analyzePhoto() {
   const apiKey = localStorage.getItem('sg_api_key');
+  console.log('APIキー確認:', apiKey ? '取得OK (長さ:'+apiKey.length+')' : '未設定');
   if (!apiKey) { alert('設定からOpenRouter APIキーを入力してください'); return; }
   if (!currentImageBase64) { alert('写真を選んでください'); return; }
 
