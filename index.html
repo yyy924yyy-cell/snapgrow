@@ -759,8 +759,12 @@ window.addEventListener('load', () => {
 
 // ====== DATA ======
 function loadData() {
-  const raw = localStorage.getItem('sg_history');
-  history = raw ? JSON.parse(raw) : [];
+  try {
+    const raw = localStorage.getItem('sg_history');
+    history = raw ? JSON.parse(raw) : [];
+  } catch(e) {
+    history = [];
+  }
 }
 function resetScoreScreen() {
   currentImageBase64 = null;
@@ -851,7 +855,10 @@ function refreshOdaiChoices() {
 
 // ====== 履歴詳細モーダル ======
 function openHistoryModal(entry) {
-  document.getElementById('modal-img').src = entry.thumb || '';
+  const imgSrc = entry.thumb || '';
+  const modalImg = document.getElementById('modal-img');
+  modalImg.src = imgSrc;
+  modalImg.style.display = imgSrc ? 'block' : 'none';
   document.getElementById('modal-score').textContent = entry.score;
   document.getElementById('modal-tag').innerHTML = `<span class="tag purple">${entry.genre}</span>${entry.mode==='odai'?' <span class="tag green">お題</span>':''}`;
   const d = new Date(entry.date);
@@ -952,6 +959,10 @@ function showScreen(name, fromLeft = false) {
 
   if (name === 'growth') renderGrowth();
   if (name === 'history') renderHistory();
+  if (name === 'settings') {
+    const k = localStorage.getItem('sg_api_key');
+    if (k) document.getElementById('api-key-input').value = k;
+  }
 }
 function goBack() {
   currentOdai = null;
@@ -1036,7 +1047,7 @@ async function generateOdai() {
   try {
     const data = await callOpenRouterWithFallback({
       apiKey,
-      models: ['openrouter/free', 'mistralai/mistral-small-3.1-24b-instruct:free'],
+      models: ['openrouter/free', 'mistralai/mistral-small-3.1-24b-instruct:free', 'qwen/qwen2.5-vl-32b-instruct:free'],
       max_tokens: 256,
       temperature: 0.7,
       messages: [{ role: 'user', content: prompt }]
@@ -1093,7 +1104,7 @@ function compressImage(src, maxSize, quality, callback) {
 }
 
 function compressForStorage(src, callback) {
-  compressImage(src, 400, 0.6, callback);
+  compressImage(src, 300, 0.5, callback); // より強く圧縮して容量節約
 }
 
 // ====== ANALYZE ======
@@ -1150,7 +1161,13 @@ async function analyzePhoto() {
     const result = JSON.parse(jsonMatch[0]);
     showResult(result);
   } catch(e) {
-    alert('採点に失敗しました。\n\nエラー：' + e.message + '\n\n設定タブでAPIキーを再保存してみてください。');
+    const errMsg = e.message || '不明なエラー';
+    // モデルエラーは自動リトライ対象外
+    if (errMsg.includes('No endpoints') || errMsg.includes('not a valid model')) {
+      alert('採点に失敗しました。\n\nAIモデルが一時的に利用できません。\nしばらく待ってからもう一度お試しください。\n\n（' + errMsg.slice(0,80) + '）');
+    } else {
+      alert('採点に失敗しました。\n\nエラー：' + errMsg.slice(0,100) + '\n\n少し待ってから再度お試しください。');
+    }
   } finally {
     btn.disabled = false;
     btn.textContent = 'AIに採点してもらう';
@@ -1300,7 +1317,7 @@ function renderHistory() {
     const d = new Date(h.date);
     const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
     return `
-      <div class="history-item" onclick="openHistoryModal(history[idx])">
+      <div class="history-item" onclick="openHistoryModal(JSON.parse(decodeURIComponent(this.dataset.entry)))" data-entry="${encodeURIComponent(JSON.stringify(h))}">
         <div class="history-thumb">${h.thumb ? `<img src="${h.thumb}">` : ''}</div>
         <div class="history-info">
           <h4>${h.genre}${h.mode==='odai'?' ★お題':''}</h4>
