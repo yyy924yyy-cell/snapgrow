@@ -954,33 +954,28 @@ async function analyzePhoto() {
 }`;
 
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-3.2-11b-vision-instruct:free',
-        max_tokens: 1024,
-        messages: [{
-          role: 'user',
-          content: [
-            {type: 'image_url', image_url: {url: `data:image/jpeg;base64,${currentImageBase64}`}},
-            {type: 'text', text: prompt}
-          ]
-        }]
-      })
+    const data = await callOpenRouterWithFallback({
+      apiKey,
+      models: [
+        'meta-llama/llama-3.2-11b-vision-instruct:free',
+        'qwen/qwen2.5-vl-7b-instruct:free'
+      ],
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: [
+          {type: 'image_url', image_url: {url: `data:image/jpeg;base64,${currentImageBase64}`}},
+          {type: 'text', text: prompt}
+        ]
+      }]
     });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    let text = data.choices?.[0]?.message?.content || '';
+    let text = normalizeMessageContent(data?.choices?.[0]?.message?.content) || '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('AIの返答からJSONを取得できませんでした');
+    if (!jsonMatch) throw new Error('AIの返答からJSONを取得できませんでした:\n' + text.slice(0, 200));
     const result = JSON.parse(jsonMatch[0]);
     showResult(result);
   } catch(e) {
-    alert('採点に失敗しました。\n\nエラー：' + e.message + '\n\n設定画面でAPIキーを確認してください。');
+    alert('採点に失敗しました。\n\nエラー：' + e.message + '\n\n設定タブでAPIキーを再保存してみてください。');
   } finally {
     btn.disabled = false;
     btn.textContent = 'AIに採点してもらう';
