@@ -535,10 +535,10 @@
       <h1>設定</h1>
     </div>
 
-    <p class="section-title">Gemini APIキー</p>
+    <p class="section-title">Claude APIキー</p>
     <div style="margin: 0 16px 16px;">
-      <input class="api-input" id="api-key-input" type="password" placeholder="AIza... で始まるキーを入力" oninput="saveApiKey()">
-      <p style="font-size:11px;color:var(--text3);margin-top:6px;">Google AI Studioで取得したAPIキーを入力してください</p>
+      <input class="api-input" id="api-key-input" type="password" placeholder="sk-ant-... で始まるキーを入力" oninput="saveApiKey()">
+      <p style="font-size:11px;color:var(--text3);margin-top:6px;">Anthropic ConsoleのAPIキー（sk-ant-...）を入力してください</p>
     </div>
 
     <p class="section-title">外観</p>
@@ -762,18 +762,28 @@ async function generateOdai() {
   const genre = selectedGenre;
   const prompt = `あなたは写真のお題を出す先生です。スマホで撮影できる「${genre}」ジャンルのお題を1つ、短く具体的に日本語で出してください。中学生でも挑戦できる内容にしてください。お題だけを1〜2文で答えてください。例：「逆光の中で葉っぱのシルエットを撮ろう」`;
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`, {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({contents: [{parts: [{text: prompt}]}]})
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 256,
+        messages: [{role: 'user', content: prompt}]
+      })
     });
     const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'お題の生成に失敗しました';
+    if (data.error) throw new Error(data.error.message);
+    const text = data.content?.[0]?.text || 'お題の生成に失敗しました';
     currentOdai = text.trim();
     document.getElementById('odai-text').textContent = currentOdai;
     document.getElementById('odai-genre').textContent = genre;
   } catch(e) {
-    document.getElementById('odai-text').textContent = 'お題の生成に失敗しました';
+    document.getElementById('odai-text').textContent = 'お題の生成に失敗しました：' + e.message;
   }
 }
 
@@ -825,7 +835,7 @@ function compressForStorage(src, callback) {
 // ====== ANALYZE ======
 async function analyzePhoto() {
   const apiKey = localStorage.getItem('sg_api_key');
-  if (!apiKey) { alert('設定からGemini APIキーを入力してください'); return; }
+  if (!apiKey) { alert('設定からClaude APIキーを入力してください'); return; }
   if (!currentImageBase64) { alert('写真を選んでください'); return; }
 
   const btn = document.getElementById('analyze-btn');
@@ -850,20 +860,29 @@ async function analyzePhoto() {
 }`;
 
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`, {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
-        contents: [{parts: [
-          {inline_data: {mime_type: 'image/jpeg', data: currentImageBase64}},
-          {text: prompt}
-        ]}]
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: [
+            {type: 'image', source: {type: 'base64', media_type: 'image/jpeg', data: currentImageBase64}},
+            {type: 'text', text: prompt}
+          ]
+        }]
       })
     });
     const data = await res.json();
-    if (data.error) throw new Error('API Error: ' + data.error.message);
-    let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    // JSON部分だけ抽出
+    if (data.error) throw new Error(data.error.message);
+    let text = data.content?.[0]?.text || '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('AIの返答からJSONを取得できませんでした');
     const result = JSON.parse(jsonMatch[0]);
