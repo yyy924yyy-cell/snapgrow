@@ -879,6 +879,9 @@
         </div>
         <div id="modal-advice"></div>
       </div>
+      <button onclick="deleteCurrentHistoryEntry()" style="width:100%;margin-top:12px;padding:14px;border-radius:12px;border:0.5px solid rgba(226,75,74,0.4);background:rgba(226,75,74,0.08);color:#e24b4a;font-size:14px;cursor:pointer;font-family:var(--font-sans);">
+        この履歴を削除する
+      </button>
     </div>
   </div>
 
@@ -1380,8 +1383,29 @@ window.addEventListener('load', () => {
 });
 
 // ====== DATA ======
+function getDeviceKey() {
+  let id = localStorage.getItem('sg_device_id');
+  if (!id) {
+    id = 'dev_' + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('sg_device_id', id);
+  }
+  return 'sg_history_' + id;
+}
 function loadData() {
-  try { const raw = localStorage.getItem('sg_history'); history = raw ? JSON.parse(raw) : []; } catch(e) { history = []; }
+  try {
+    const raw = localStorage.getItem(getDeviceKey());
+    // 旧データがあれば移行
+    if (!raw) {
+      const legacy = localStorage.getItem('sg_history');
+      if (legacy) {
+        localStorage.setItem(getDeviceKey(), legacy);
+        localStorage.removeItem('sg_history');
+        history = JSON.parse(legacy);
+        return;
+      }
+    }
+    history = raw ? JSON.parse(raw) : [];
+  } catch(e) { history = []; }
 }
 function resetScoreScreen() {
   currentImageBase64 = null;
@@ -1392,9 +1416,9 @@ function resetScoreScreen() {
   document.getElementById('file-input').value = '';
 }
 function saveData() {
-  try { localStorage.setItem('sg_history', JSON.stringify(history)); } catch(e) {
+  try { localStorage.setItem(getDeviceKey(), JSON.stringify(history)); } catch(e) {
     history = history.slice(0, 20);
-    try { localStorage.setItem('sg_history', JSON.stringify(history)); } catch(e2) {}
+    try { localStorage.setItem(getDeviceKey(), JSON.stringify(history)); } catch(e2) {}
   }
 }
 function saveApiKeyBtn() {
@@ -1500,7 +1524,9 @@ function selectOdai(i) {
 function refreshOdaiChoices() { renderOdaiChoices(); }
 
 // ====== 履歴詳細モーダル ======
+let currentModalEntryId = null;
 function openHistoryModal(entry) {
+  currentModalEntryId = entry.id;
   const imgSrc = entry.thumb || '';
   const modalImg = document.getElementById('modal-img');
   modalImg.src = imgSrc; modalImg.style.display = imgSrc ? 'block' : 'none';
@@ -1514,6 +1540,16 @@ function openHistoryModal(entry) {
   document.getElementById('modal-advice').innerHTML = `<p style="margin-bottom:10px"><strong style="color:var(--green-light)">良かった点</strong><br>${entry.良かった点||'-'}</p><p style="margin-bottom:10px"><strong style="color:var(--purple-light)">改善ポイント</strong><br>${entry.改善ポイント||'-'}</p>${iphoneHint?`<p style="margin-bottom:10px;background:rgba(127,119,221,0.08);border-radius:10px;padding:10px;"><strong style="color:var(--purple-light)">📱 iPhoneカメラのヒント</strong><br>${iphoneHint}</p>`:''}<p><strong style="color:var(--text2)">次のチャレンジ</strong><br>${entry.次のチャレンジ||'-'}</p>`;
   document.getElementById('history-modal-overlay').classList.remove('hidden');
 }
+function deleteCurrentHistoryEntry() {
+  if (!currentModalEntryId) return;
+  if (!confirm('この採点履歴を削除しますか？')) return;
+  history = history.filter(h => h.id !== currentModalEntryId);
+  saveData();
+  updateHome();
+  document.getElementById('history-modal-overlay').classList.add('hidden');
+  renderHistory();
+}
+
 function closeHistoryModal(e) {
   if (e.target === document.getElementById('history-modal-overlay')) document.getElementById('history-modal-overlay').classList.add('hidden');
 }
@@ -1607,11 +1643,34 @@ async function analyzePhoto() {
   btn.innerHTML = '<svg class="spin" style="width:18px;height:18px;vertical-align:middle;margin-right:6px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>採点中...';
   const odaiText = currentMode === 'odai' && currentOdai ? `\nお題：「${currentOdai}」` : '';
   if (currentMode === 'odai' && !currentOdai) { alert('お題を選んでください'); btn.disabled=false; btn.textContent='AIに採点してもらう'; return; }
-  const prompt = `あなたは写真の先生です。この写真を「${selectedGenre}」ジャンルとして採点してください。${odaiText}\n\nスマホで撮影した写真を想定し、中学生にもわかるやさしい言葉でアドバイスしてください。\n\n以下のJSON形式だけで回答してください（他の文章は不要）：\n{\n  "構図": <0〜20の整数>,\n  "明るさ": <0〜20の整数>,\n  "色彩": <0〜20の整数>,\n  "被写体": <0〜20の整数>,\n  "物語性": <0〜20の整数>,\n  "良かった点": "<まず褒める。具体的に2〜3文で>",\n  "改善ポイント": "<具体的な改善内容を2〜3文で>",\n  "iPhone操作ヒント": "<iPhoneカメラの具体的な操作方法。2文>",\n  "次のチャレンジ": "<次に試してほしいこと1文>"\n}`;
+  const prompt = `あなたは写真採点の専門家です。以下の厳密な採点基準に従い、同じ写真には常に同じ点数をつけてください。${odaiText ? '\nお題：「' + currentOdai + '」に対して採点してください。' : ''}
+
+【採点基準（各0〜20点）】
+- 構図：三分割・対称・余白・視線誘導（0=まったく意識なし、10=普通、20=完璧）
+- 明るさ：適正露出・ハイライト・シャドウ（0=真っ暗/白飛び、10=普通、20=完璧な露出）
+- 色彩：色温度・彩度・色の統一感（0=不自然、10=普通、20=非常に美しい）
+- 被写体：主役の明確さ・ピント・ボケ（0=主役不明、10=普通、20=完璧）
+- 物語性：写真から伝わるメッセージ・感情（0=なし、10=普通、20=強く伝わる）
+
+スマホ撮影・中学生向けのやさしい言葉でアドバイスしてください。
+
+必ず以下のJSON形式のみで回答（前後に文章不要）：
+{
+  "構図": <整数>,
+  "明るさ": <整数>,
+  "色彩": <整数>,
+  "被写体": <整数>,
+  "物語性": <整数>,
+  "良かった点": "<具体的に2文>",
+  "改善ポイント": "<具体的に2文>",
+  "iPhone操作ヒント": "<iPhoneカメラの具体操作。例：画面タップでピント、太陽マークで明るさ調整。2文>",
+  "次のチャレンジ": "<次に試すこと1文>"
+}`;
   try {
     const data = await callOpenRouterWithFallback({
       apiKey,
       models: ['openrouter/free','mistralai/mistral-small-3.1-24b-instruct:free','qwen/qwen2.5-vl-32b-instruct:free','moonshotai/kimi-vl-a3b-thinking:free'],
+      temperature: 0.1,
       max_tokens: 1024,
       messages: [{ role: 'user', content: [{ type:'image_url', image_url:{ url:`data:image/jpeg;base64,${currentImageBase64}` } }, { type:'text', text:prompt }] }]
     });
