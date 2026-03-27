@@ -553,6 +553,7 @@
         <div class="hero-score" id="hero-score">--</div>
         <div class="hero-sub" id="hero-sub">まだ採点していません</div>
         <span class="hero-badge" id="hero-badge" style="display:none"></span>
+        <div id="hero-level" style="margin-top:6px;font-size:11px;color:var(--purple-light);"></div>
       </div>
     </div>
 
@@ -574,6 +575,12 @@
       </div>
     </div>
 
+    <div id="genre-analysis" style="margin:0 16px 12px;display:none">
+      <div style="background:var(--bg2);border-radius:var(--card-r);border:0.5px solid var(--border);padding:14px 16px;">
+        <p style="font-size:11px;color:var(--text3);margin-bottom:8px;">ジャンル別分析</p>
+        <div id="genre-analysis-content" style="font-size:12px;color:var(--text2);line-height:1.8;"></div>
+      </div>
+    </div>
     <div class="stats-row" id="stats-row">
       <div class="stat-card"><div class="val" id="stat-count">0</div><div class="lbl">採点回数</div></div>
       <div class="stat-card"><div class="val" id="stat-best">--</div><div class="lbl">最高スコア</div></div>
@@ -1495,13 +1502,78 @@ function updateHome() {
   const days = new Set(history.map(h => new Date(h.date).toDateString())).size;
   document.getElementById('stat-days').textContent = days;
   renderHomeBadges();
+  updateGenreAnalysis();
+  updateLevelDisplay();
 }
 
 // ====== お題 ======
 const ODAI_BANK = {
-  '風景・自然': ['空と雲だけを主役にした写真を撮ろう','木の葉や花をアップで撮ってみよう','水たまりや川の反射を使った写真を撮ろう','夕暮れや朝の光を使った写真に挑戦しよう','影や光のコントラストを意識して撮ろう','身近な植物や草花を主役にしよう','空を背景に何かをシルエットで撮ろう'],
-  'ポートレート': ['笑顔の瞬間を自然に撮ってみよう','後ろ姿や横顔を撮ってみよう','手や足など体の一部をアップで撮ろう','窓からの光を使って人を撮ろう','人物と背景のボケ感を意識して撮ろう','動いている瞬間をとらえてみよう'],
-  '街・スナップ': ['看板や文字が入った街の風景を撮ろう','人が少ない早朝の街を撮ってみよう','建物の形や模様をアップで撮ろう','自転車や乗り物を主役にしよう','商店街やお店の雰囲気を切り取ろう','階段や橋などの構造物を面白く撮ろう','道路や歩道のラインを使った構図を試そう'],
+  '風景・自然': [
+    '空と雲だけを主役にした写真を撮ろう',
+    '木の葉や花をアップで撮ってみよう',
+    '水たまりや川の反射を使った写真を撮ろう',
+    '夕暮れや朝の光を使った写真に挑戦しよう',
+    '影や光のコントラストを意識して撮ろう',
+    '身近な植物や草花を主役にしよう',
+    '空を背景に何かをシルエットで撮ろう',
+    '雨の日の水滴や濡れた地面を撮ろう',
+    '木漏れ日や光の筋を写真に収めよう',
+    '遠くの景色と近くの物を両方入れて撮ろう',
+    '同じ色のものだけを集めた写真を撮ろう',
+    '朝露がついた葉や草を接近して撮ろう',
+    '青空をできるだけ大きく使った構図で撮ろう',
+    '道や川など「線」を使った構図に挑戦しよう',
+    '身近な公園や庭を別の角度から撮ってみよう',
+    '夜や夕方の空の色のグラデーションを撮ろう',
+    '風に揺れる葉や草の動きを表現しよう',
+    '石や地面のテクスチャーをアップで撮ろう',
+    '遠くの山や建物を小さく入れた広い風景を撮ろう',
+    '季節の花を主役にした写真を撮ろう',
+  ],
+  'ポートレート': [
+    '笑顔の瞬間を自然に撮ってみよう',
+    '後ろ姿や横顔を撮ってみよう',
+    '手や足など体の一部をアップで撮ろう',
+    '窓からの光を使って人を撮ろう',
+    '人物と背景のボケ感を意識して撮ろう',
+    '動いている瞬間をとらえてみよう',
+    '人物の目線を画面の端に置いた構図を試そう',
+    '逆光を使ってドラマチックな雰囲気を出そう',
+    '何かをしている手元のアップを撮ろう',
+    '人物の表情が見えない後ろ姿の写真を撮ろう',
+    '帽子やメガネなど小物を活かした写真を撮ろう',
+    '顔の半分だけ見える構図に挑戦しよう',
+    '子供や動物のいきいきとした瞬間を撮ろう',
+    '人物を小さく入れて場所の雰囲気を出そう',
+    '読書や料理など何かに集中している姿を撮ろう',
+    '光と影で顔の半分を暗くした写真を撮ろう',
+    '人物と一緒に好きな物を入れて撮ろう',
+    '笑っている横顔を自然に撮ってみよう',
+    '空を背景にジャンプする瞬間を狙おう',
+    '家族の何気ない日常の一コマを切り取ろう',
+  ],
+  '街・スナップ': [
+    '看板や文字が入った街の風景を撮ろう',
+    '人が少ない早朝の街を撮ってみよう',
+    '建物の形や模様をアップで撮ろう',
+    '自転車や乗り物を主役にしよう',
+    '商店街やお店の雰囲気を切り取ろう',
+    '階段や橋などの構造物を面白く撮ろう',
+    '道路や歩道のラインを使った構図を試そう',
+    '窓ガラスの反射を使ったユニークな写真を撮ろう',
+    '信号や標識など街のサインを主役にしよう',
+    'カフェや飲食店の外観を魅力的に撮ろう',
+    '夜の街灯や光の写真に挑戦しよう',
+    '壁のペイントやアートを撮ってみよう',
+    '人が歩いている瞬間をぼかして撮ってみよう',
+    '雨の日の傘が並ぶ風景を撮ろう',
+    '公園のベンチや遊具を印象的に撮ろう',
+    '電線や架線が空と交差する写真を撮ろう',
+    '橋や歩道橋の上から下を見下ろして撮ろう',
+    '色がきれいな建物の扉や窓だけを撮ろう',
+    '人と建物の対比が出る写真を撮ろう',
+    '夕暮れの街並みをシルエットで撮ろう',
+  ]
 };
 let currentOdaiChoices = [], selectedOdaiIndex = -1;
 function renderOdaiChoices() {
@@ -1695,9 +1767,20 @@ async function analyzePhoto() {
 function showResult(result) {
   const scores = [result['構図'],result['明るさ'],result['色彩'],result['被写体'],result['物語性']];
   const total = scores.reduce((a,b)=>a+b,0);
+
+  // 前回比較
+  const prevEntry = history.find(h => h.genre === selectedGenre);
+  let compareHTML = '';
+  if (prevEntry) {
+    const diff = total - prevEntry.score;
+    const sign = diff >= 0 ? '+' : '';
+    const color = diff > 0 ? 'var(--green-light)' : diff < 0 ? '#e24b4a' : 'var(--text2)';
+    compareHTML = `<div style="text-align:center;margin-bottom:8px;font-size:13px;color:${color}">前回（${prevEntry.genre}）より <strong>${sign}${diff}点</strong></div>`;
+  }
+
   showScreen('result');
   document.getElementById('result-score').textContent = total;
-  document.getElementById('result-genre-tag').innerHTML = `<span class="tag purple">${selectedGenre}</span>`;
+  document.getElementById('result-genre-tag').innerHTML = `<span class="tag purple">${selectedGenre}</span>${compareHTML}`;
   const resultImg = document.getElementById('result-preview');
   resultImg.innerHTML = `<img src="data:image/jpeg;base64,${currentImageBase64}" alt="採点写真">`;
   scores.forEach((s,i) => { document.getElementById(`val-${i}`).textContent = s; setTimeout(() => { document.getElementById(`bar-${i}`).style.width = `${s/20*100}%`; }, 100+i*100); });
@@ -1712,6 +1795,8 @@ function showResult(result) {
     updateHome();
     updateBestBackground();
     checkAndAwardBadges();
+    updateGenreAnalysis();
+    updateLevelDisplay();
   });
 }
 function updateBestBackground() {
@@ -1750,8 +1835,80 @@ function renderHistory() {
   list.innerHTML = history.map(h => {
     const d = new Date(h.date);
     const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-    return `<div class="history-item" onclick="openHistoryModal(JSON.parse(decodeURIComponent(this.dataset.entry)))" data-entry="${encodeURIComponent(JSON.stringify(h))}"><div class="history-thumb">${h.thumb?`<img src="${h.thumb}">`:''}</div><div class="history-info"><h4>${h.genre}${h.mode==='odai'?' ★お題':''}</h4><p>${dateStr}</p>${h.次のチャレンジ?`<p style="font-size:10px;color:var(--text3);margin-top:2px">${h.次のチャレンジ}</p>`:''}</div><div class="history-score">${h.score}</div></div>`;
+    return `<div class="history-item" onclick="openHistoryModal(JSON.parse(decodeURIComponent(this.dataset.entry)))" data-entry="${encodeURIComponent(JSON.stringify(h))}"><div class="history-thumb">${h.thumb?`<img src="${h.thumb}">`:''}</div><div class="history-info"><h4>${h.genre}${h.mode==='odai'?' ★お題':''}</h4><p>${dateStr}</p>${h.次のチャレンジ?`<p style="font-size:10px;color:var(--text3);margin-top:2px">${h.次のチャレンジ}</p>`:''}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div class="history-score">${h.score}</div><span style="font-size:16px;cursor:pointer;" onclick="event.stopPropagation();toggleFavorite(${h.id})" id="fav-${h.id}">${h.favorite?'⭐':'☆'}</span></div></div>`;
   }).join('');
+}
+
+// ====== ⑤ ジャンル別得意・苦手分析 ======
+function updateGenreAnalysis() {
+  const genres = ['風景・自然', 'ポートレート', '街・スナップ'];
+  const el = document.getElementById('genre-analysis');
+  const contentEl = document.getElementById('genre-analysis-content');
+  if (!history.length) { el.style.display = 'none'; return; }
+
+  const genreData = {};
+  genres.forEach(g => {
+    const entries = history.filter(h => h.genre === g);
+    if (entries.length) {
+      genreData[g] = Math.round(entries.reduce((s,h) => s+h.score, 0) / entries.length);
+    }
+  });
+
+  const sorted = Object.entries(genreData).sort((a,b) => b[1]-a[1]);
+  if (sorted.length < 2) { el.style.display = 'none'; return; }
+
+  let html = '';
+  sorted.forEach(([genre, avg], i) => {
+    const icon = i === 0 ? '💪 得意' : i === sorted.length-1 ? '📚 練習中' : '📷';
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <span>${icon} ${genre}</span>
+      <span style="font-family:'Space Mono',monospace;color:var(--purple-light)">平均${avg}点</span>
+    </div>`;
+  });
+  contentEl.innerHTML = html;
+  el.style.display = 'block';
+}
+
+// ====== ⑥ お気に入り ======
+function toggleFavorite(id) {
+  const entry = history.find(h => h.id === id);
+  if (!entry) return;
+  entry.favorite = !entry.favorite;
+  saveData();
+  const el = document.getElementById('fav-' + id);
+  if (el) el.textContent = entry.favorite ? '⭐' : '☆';
+}
+
+// ====== ⑧ レベル・バッジシステム ======
+const LEVELS = [
+  { name: '見習いカメラマン', minCount: 0,  minAvg: 0  },
+  { name: 'アマチュア',       minCount: 5,  minAvg: 40 },
+  { name: '中級者',           minCount: 15, minAvg: 55 },
+  { name: '上級者',           minCount: 30, minAvg: 65 },
+  { name: 'セミプロ',         minCount: 50, minAvg: 75 },
+  { name: 'プロカメラマン',   minCount: 100,minAvg: 85 },
+];
+
+function getCurrentLevel() {
+  const count = history.length;
+  const avg = count ? Math.round(history.reduce((s,h)=>s+h.score,0)/count) : 0;
+  let level = LEVELS[0];
+  for (const l of LEVELS) {
+    if (count >= l.minCount && avg >= l.minAvg) level = l;
+  }
+  return level;
+}
+
+function updateLevelDisplay() {
+  const level = getCurrentLevel();
+  const idx = LEVELS.indexOf(level);
+  const next = LEVELS[idx+1];
+  const el = document.getElementById('hero-level');
+  if (!el) return;
+  if (history.length === 0) { el.textContent = ''; return; }
+  let txt = `🎖 ${level.name}`;
+  if (next) txt += ` → 次：${next.name}（あと${Math.max(0,next.minCount-history.length)}枚）`;
+  el.textContent = txt;
 }
 
 // ====== CLEAR DATA ======
