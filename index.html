@@ -333,6 +333,160 @@
   .tag { display: inline-block; font-size: 10px; padding: 3px 10px; border-radius: 20px; }
   .tag.purple { background: var(--purple-dark); color: var(--purple-light); }
   .tag.green { background: rgba(29,158,117,0.15); color: var(--green-light); }
+
+  /* ===== 新機能: バッジシステム ===== */
+  .badges-row {
+    display: flex; gap: 8px; padding: 0 16px; margin-bottom: 16px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .badges-row::-webkit-scrollbar { display: none; }
+  .badge-chip {
+    flex-shrink: 0; background: var(--bg2); border-radius: 20px;
+    border: 0.5px solid var(--border); padding: 6px 12px;
+    display: flex; align-items: center; gap: 6px; font-size: 12px;
+    transition: all var(--transition);
+  }
+  .badge-chip.earned { border-color: rgba(255,200,0,0.4); background: rgba(255,200,0,0.06); }
+  .badge-chip.earned .badge-icon { filter: none; }
+  .badge-chip .badge-icon { font-size: 16px; filter: grayscale(1) opacity(0.3); }
+  .badge-chip .badge-name { color: var(--text2); font-size: 11px; }
+  .badge-chip.earned .badge-name { color: var(--text); }
+
+  /* バッジ獲得アニメーション */
+  .badge-toast {
+    position: fixed; top: calc(env(safe-area-inset-top) + 20px); left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: var(--bg2); border: 1px solid rgba(255,200,0,0.4);
+    border-radius: 20px; padding: 10px 20px;
+    display: flex; align-items: center; gap: 10px;
+    z-index: 9999; transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .badge-toast.show { transform: translateX(-50%) translateY(0); }
+  .badge-toast .toast-icon { font-size: 24px; }
+  .badge-toast .toast-text { font-size: 13px; }
+  .badge-toast .toast-text strong { display: block; font-size: 14px; color: #FFD700; }
+
+  /* ===== 新機能: ビフォーアフター比較 ===== */
+  #screen-compare .compare-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    padding: 0 16px; margin-bottom: 16px;
+  }
+  .compare-slot {
+    background: var(--bg2); border-radius: 12px; border: 0.5px solid var(--border);
+    overflow: hidden; cursor: pointer; transition: all var(--transition);
+    aspect-ratio: 1;
+    display: flex; flex-direction: column;
+  }
+  .compare-slot:active { transform: scale(0.97); }
+  .compare-slot .slot-img { flex: 1; object-fit: cover; width: 100%; }
+  .compare-slot .slot-footer {
+    padding: 8px; background: var(--bg3); text-align: center;
+  }
+  .compare-slot .slot-score { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; color: var(--purple-light); }
+  .compare-slot .slot-label { font-size: 10px; color: var(--text2); }
+  .compare-slot .slot-empty {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--text3); font-size: 12px; gap: 8px; padding: 16px;
+  }
+  .compare-slot .slot-empty svg { width: 28px; height: 28px; }
+  .compare-result {
+    margin: 0 16px 16px; background: var(--bg2); border-radius: var(--card-r);
+    border: 0.5px solid var(--border); padding: 16px;
+  }
+  .compare-diff-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  }
+  .compare-diff-row:last-child { margin-bottom: 0; }
+  .compare-diff-label { font-size: 12px; color: var(--text2); width: 60px; flex-shrink: 0; }
+  .compare-diff-bars { flex: 1; position: relative; height: 20px; }
+  .compare-bar-before {
+    position: absolute; left: 0; top: 7px; height: 6px;
+    background: var(--text3); border-radius: 4px; transition: width 0.8s ease;
+  }
+  .compare-bar-after {
+    position: absolute; left: 0; top: 7px; height: 6px;
+    background: var(--purple); border-radius: 4px; transition: width 0.8s ease; opacity: 0.85;
+  }
+  .compare-diff-val {
+    font-size: 12px; font-family: 'Space Mono', monospace; width: 36px; text-align: right;
+  }
+  .compare-diff-val.up { color: var(--green-light); }
+  .compare-diff-val.down { color: #e24b4a; }
+  .compare-diff-val.same { color: var(--text3); }
+
+  /* ===== 新機能: テクニック学習タブ ===== */
+  .tech-category-row {
+    display: flex; gap: 8px; padding: 0 16px; margin-bottom: 16px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .tech-category-row::-webkit-scrollbar { display: none; }
+  .tech-cat-btn {
+    flex-shrink: 0; padding: 7px 14px; border-radius: 20px; font-size: 12px; cursor: pointer;
+    border: 0.5px solid var(--border); background: var(--bg2); color: var(--text2);
+    transition: all var(--transition); font-family: 'DM Sans', sans-serif;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .tech-cat-btn.active { background: var(--purple-dark); color: var(--purple-light); border-color: var(--purple); }
+  .tech-card {
+    background: var(--bg2); border-radius: var(--card-r); border: 0.5px solid var(--border);
+    margin: 0 16px 10px; overflow: hidden; cursor: pointer; transition: all var(--transition);
+  }
+  .tech-card:active { transform: scale(0.99); }
+  .tech-card-header {
+    padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+  }
+  .tech-card-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--purple-dark); display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .tech-card-icon.green-bg { background: rgba(29,158,117,0.15); }
+  .tech-card-title { font-size: 14px; font-weight: 500; }
+  .tech-card-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .tech-card-arrow { margin-left: auto; color: var(--text3); }
+  .tech-card-body {
+    padding: 0 16px 16px; display: none;
+    border-top: 0.5px solid var(--border);
+  }
+  .tech-card-body.open { display: block; }
+  .tech-tip {
+    background: var(--bg3); border-radius: 10px; padding: 12px; margin-top: 10px;
+  }
+  .tech-tip-title { font-size: 12px; font-weight: 500; color: var(--purple-light); margin-bottom: 4px; }
+  .tech-tip-text { font-size: 12px; color: var(--text2); line-height: 1.7; }
+  .tech-weak-hint {
+    background: rgba(255,200,0,0.06); border: 0.5px solid rgba(255,200,0,0.2);
+    border-radius: 10px; padding: 10px 12px; margin: 0 16px 12px;
+    font-size: 12px; color: #FFD700;
+  }
+  .tech-weak-hint strong { display: block; margin-bottom: 2px; font-size: 11px; }
+
+  /* ===== 新機能: 週次AIレポート ===== */
+  .weekly-report-card {
+    background: var(--bg2); border-radius: var(--card-r); border: 0.5px solid var(--border);
+    margin: 0 16px 12px; padding: 16px;
+  }
+  .weekly-report-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  }
+  .weekly-report-icon {
+    width: 36px; height: 36px; border-radius: 10px; background: var(--purple-dark);
+    display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+  }
+  .weekly-report-title { font-size: 14px; font-weight: 500; }
+  .weekly-report-date { font-size: 11px; color: var(--text2); }
+  .weekly-report-body { font-size: 13px; color: var(--text2); line-height: 1.8; }
+  .weekly-report-body strong { color: var(--text); }
+  .weekly-report-generate {
+    width: 100%; padding: 12px; border-radius: 10px;
+    background: var(--purple-dark); color: var(--purple-light);
+    border: 0.5px solid var(--purple); font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all var(--transition);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .weekly-report-generate:active { transform: scale(0.98); }
+  .weekly-report-generate:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -371,6 +525,15 @@
     </svg>
     <div id="splash-title">SnapGrow</div>
     <div id="splash-sub">撮影スキル向上アプリ</div>
+  </div>
+</div>
+
+<!-- バッジ獲得トースト -->
+<div id="badge-toast" class="badge-toast">
+  <div class="toast-icon" id="toast-icon">🏆</div>
+  <div class="toast-text">
+    <strong id="toast-title">バッジ獲得！</strong>
+    <span id="toast-desc">初めての採点</span>
   </div>
 </div>
 
@@ -416,6 +579,10 @@
       <div class="stat-card"><div class="val" id="stat-best">--</div><div class="lbl">最高スコア</div></div>
       <div class="stat-card"><div class="val" id="stat-days">0</div><div class="lbl">継続日数</div></div>
     </div>
+
+    <!-- バッジ表示 -->
+    <p class="section-title">獲得バッジ</p>
+    <div class="badges-row" id="home-badges-row"></div>
   </div>
 
   <!-- SCORING SCREEN -->
@@ -510,7 +677,7 @@
       <div id="advice-content"><div class="advice-loading"><div class="dots"><span>●</span><span>●</span><span>●</span></div></div></div>
     </div>
 
-    <button class="btn-primary" style="margin-bottom:20px" onclick="resetScoreScreen(); showScreen('score')">戻る</button>
+    <button class="btn-primary" style="margin-bottom:20px" onclick="resetScoreScreen(); showScreen('score')">もう1枚採点する</button>
   </div>
 
   <!-- GROWTH SCREEN -->
@@ -518,6 +685,25 @@
     <div class="screen-header">
       <h1>成長グラフ</h1>
       <p>スコアの推移を確認しよう</p>
+    </div>
+
+    <!-- 週次AIレポート -->
+    <p class="section-title">週次AIレポート</p>
+    <div id="weekly-report-section" style="margin: 0 16px 12px;">
+      <div id="weekly-report-display" style="display:none" class="weekly-report-card">
+        <div class="weekly-report-header">
+          <div class="weekly-report-icon">📊</div>
+          <div>
+            <div class="weekly-report-title">今週の成長レポート</div>
+            <div class="weekly-report-date" id="weekly-report-date"></div>
+          </div>
+        </div>
+        <div class="weekly-report-body" id="weekly-report-body"></div>
+      </div>
+      <button class="weekly-report-generate" id="weekly-report-btn" onclick="generateWeeklyReport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        AIに週次レポートを書いてもらう
+      </button>
     </div>
 
     <div class="stats-row">
@@ -547,7 +733,92 @@
       <h1>採点履歴</h1>
       <p>過去の写真と結果を確認</p>
     </div>
+
+    <!-- ビフォーアフター比較ボタン -->
+    <div style="padding: 0 16px; margin-bottom: 12px;">
+      <button onclick="showScreen('compare')" style="width:100%;padding:12px;border-radius:12px;background:var(--bg2);border:0.5px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;transition:all var(--transition);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/></svg>
+        ビフォーアフター比較
+      </button>
+    </div>
+
     <div id="history-list"></div>
+  </div>
+
+  <!-- COMPARE SCREEN (ビフォーアフター) -->
+  <div id="screen-compare" class="screen hidden">
+    <div class="screen-header" style="display:flex;align-items:center;gap:12px;">
+      <button onclick="showScreen('history')" style="background:none;border:none;color:var(--text2);cursor:pointer;padding:0;flex-shrink:0;margin-top:0;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div>
+        <h1>ビフォーアフター</h1>
+        <p>2枚を選んで比較しよう</p>
+      </div>
+    </div>
+
+    <div class="compare-grid">
+      <div class="compare-slot" id="compare-slot-a" onclick="openCompareSelect('a')">
+        <div class="slot-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span>ビフォー<br>タップして選択</span>
+        </div>
+      </div>
+      <div class="compare-slot" id="compare-slot-b" onclick="openCompareSelect('b')">
+        <div class="slot-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span>アフター<br>タップして選択</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="compare-result-section" style="display:none">
+      <div class="compare-result">
+        <div class="card-label" style="margin-bottom:12px;">スコア比較</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding:12px;background:var(--bg3);border-radius:10px;">
+          <div style="text-align:center">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:2px">ビフォー</div>
+            <div style="font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:var(--text2)" id="compare-score-a">--</div>
+          </div>
+          <div style="font-size:20px;color:var(--text3)">→</div>
+          <div style="text-align:center">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:2px">アフター</div>
+            <div style="font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:var(--purple-light)" id="compare-score-b">--</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:2px">変化</div>
+            <div style="font-family:'Space Mono',monospace;font-size:24px;font-weight:700;" id="compare-score-diff">--</div>
+          </div>
+        </div>
+        <div class="card-label">項目別比較</div>
+        <div id="compare-diff-bars"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TECHNIQUE SCREEN (テクニック学習) -->
+  <div id="screen-technique" class="screen hidden">
+    <div class="screen-header">
+      <h1>テクニック</h1>
+      <p>撮影スキルを学ぼう</p>
+    </div>
+
+    <!-- 弱点ヒント -->
+    <div id="tech-weak-hint" style="display:none" class="tech-weak-hint">
+      <strong>💡 あなたの弱点ポイント</strong>
+      <span id="tech-weak-hint-text"></span>
+    </div>
+
+    <div class="tech-category-row">
+      <button class="tech-cat-btn active" data-cat="all" onclick="selectTechCat(this)">すべて</button>
+      <button class="tech-cat-btn" data-cat="構図" onclick="selectTechCat(this)">📐 構図</button>
+      <button class="tech-cat-btn" data-cat="明るさ" onclick="selectTechCat(this)">☀️ 明るさ</button>
+      <button class="tech-cat-btn" data-cat="色彩" onclick="selectTechCat(this)">🎨 色彩</button>
+      <button class="tech-cat-btn" data-cat="被写体" onclick="selectTechCat(this)">🎯 被写体</button>
+      <button class="tech-cat-btn" data-cat="物語性" onclick="selectTechCat(this)">✨ 物語性</button>
+    </div>
+
+    <div id="technique-list"></div>
   </div>
 
   <!-- SETTINGS SCREEN -->
@@ -563,7 +834,7 @@
         <button class="btn-primary" style="margin:0;padding:10px 16px;font-size:13px;" onclick="saveApiKeyBtn()">保存する</button>
         <span id="save-status" style="font-size:12px;color:var(--green-light);display:none;">✓ 保存済み</span>
       </div>
-      <p style="font-size:11px;color:var(--text3);margin-top:8px;">入力して「保存する」を押してください。※ file:// 直開きではAPI通信に失敗することがあります</p>
+      <p style="font-size:11px;color:var(--text3);margin-top:8px;">入力して「保存する」を押してください</p>
     </div>
 
     <p class="section-title">外観</p>
@@ -579,7 +850,7 @@
 
     <p class="section-title">アプリ情報</p>
     <div class="setting-row">
-      <div class="info"><h4>バージョン</h4><p>1.0.1</p></div>
+      <div class="info"><h4>バージョン</h4><p>1.1.0</p></div>
     </div>
     <div class="setting-row" style="cursor:pointer" onclick="clearData()">
       <div class="info"><h4 style="color:#e24b4a">データをリセット</h4><p>全ての履歴を削除します</p></div>
@@ -611,6 +882,15 @@
     </div>
   </div>
 
+  <!-- COMPARE SELECT MODAL -->
+  <div class="history-modal-overlay hidden" id="compare-select-overlay" onclick="closeCompareSelect(event)">
+    <div class="history-modal">
+      <div class="modal-handle"></div>
+      <p style="font-size:14px;font-weight:500;margin-bottom:12px;" id="compare-select-title">写真を選択</p>
+      <div id="compare-select-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+
   <!-- BOTTOM NAV -->
   <div id="nav">
     <div class="nav-item active" onclick="showScreen('home')" id="nav-home">
@@ -625,6 +905,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       <span>成長</span>
     </div>
+    <div class="nav-item" onclick="showScreen('technique')" id="nav-technique">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span>学習</span>
+    </div>
     <div class="nav-item" onclick="showScreen('settings')" id="nav-settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       <span>設定</span>
@@ -637,134 +921,467 @@
 <script>
 // ====== STATE ======
 let currentScreen = 'home';
-let currentMode = 'free'; // free | odai
+let currentMode = 'free';
 let selectedGenre = '風景・自然';
 let currentImageBase64 = null;
 let currentOdai = null;
 let history = [];
 let lineChart = null;
 let radarChart = null;
+let compareEntryA = null;
+let compareEntryB = null;
+let compareSelectTarget = null;
+let currentTechCat = 'all';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
+// ====== バッジ定義 ======
+const BADGE_DEFS = [
+  { id: 'first_shot',    icon: '📸', name: '初採点',       desc: '初めて採点した',           check: (h) => h.length >= 1 },
+  { id: 'score_70',      icon: '⭐', name: '70点超え',      desc: '70点以上を取得',           check: (h) => h.some(e => e.score >= 70) },
+  { id: 'score_80',      icon: '🌟', name: '80点超え',      desc: '80点以上を取得',           check: (h) => h.some(e => e.score >= 80) },
+  { id: 'score_90',      icon: '💫', name: '90点超え',      desc: '90点以上を取得',           check: (h) => h.some(e => e.score >= 90) },
+  { id: 'count_5',       icon: '🔥', name: '5枚達成',       desc: '5回採点した',              check: (h) => h.length >= 5 },
+  { id: 'count_10',      icon: '🚀', name: '10枚達成',      desc: '10回採点した',             check: (h) => h.length >= 10 },
+  { id: 'count_30',      icon: '👑', name: '30枚達成',      desc: '30回採点した',             check: (h) => h.length >= 30 },
+  { id: 'days_3',        icon: '📅', name: '3日連続',       desc: '3日連続で採点',            check: (h) => calcMaxStreak(h) >= 3 },
+  { id: 'days_7',        icon: '🗓️', name: '7日連続',       desc: '7日連続で採点',            check: (h) => calcMaxStreak(h) >= 7 },
+  { id: 'odai_master',   icon: '🎯', name: 'お題マスター',  desc: 'お題採点を5回クリア',      check: (h) => h.filter(e => e.mode === 'odai').length >= 5 },
+  { id: 'genre_3',       icon: '🌈', name: '全ジャンル',    desc: '3ジャンルすべて採点',      check: (h) => new Set(h.map(e => e.genre)).size >= 3 },
+  { id: 'improve_10',    icon: '📈', name: '10点アップ',    desc: 'スコアが10点以上向上',     check: (h) => h.length >= 2 && (Math.max(...h.slice(0,5).map(e=>e.score)) - Math.max(...h.slice(-5).map(e=>e.score))) >= 10 },
+];
+
+function calcMaxStreak(h) {
+  if (!h.length) return 0;
+  const days = [...new Set(h.map(e => new Date(e.date).toDateString()))].sort();
+  let max = 1, cur = 1;
+  for (let i = 1; i < days.length; i++) {
+    const d1 = new Date(days[i-1]), d2 = new Date(days[i]);
+    const diff = (d2 - d1) / 86400000;
+    cur = diff === 1 ? cur + 1 : 1;
+    if (cur > max) max = cur;
+  }
+  return max;
+}
+
+function checkAndAwardBadges() {
+  const earned = JSON.parse(localStorage.getItem('sg_badges') || '[]');
+  const newBadges = [];
+  for (const badge of BADGE_DEFS) {
+    if (!earned.includes(badge.id) && badge.check(history)) {
+      earned.push(badge.id);
+      newBadges.push(badge);
+    }
+  }
+  if (newBadges.length) {
+    localStorage.setItem('sg_badges', JSON.stringify(earned));
+    newBadges.forEach((b, i) => setTimeout(() => showBadgeToast(b), i * 1500));
+  }
+  return earned;
+}
+
+function showBadgeToast(badge) {
+  document.getElementById('toast-icon').textContent = badge.icon;
+  document.getElementById('toast-title').textContent = `バッジ獲得！「${badge.name}」`;
+  document.getElementById('toast-desc').textContent = badge.desc;
+  const toast = document.getElementById('badge-toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function renderHomeBadges() {
+  const earned = JSON.parse(localStorage.getItem('sg_badges') || '[]');
+  const row = document.getElementById('home-badges-row');
+  if (!row) return;
+  row.innerHTML = BADGE_DEFS.map(b => `
+    <div class="badge-chip ${earned.includes(b.id) ? 'earned' : ''}">
+      <span class="badge-icon">${b.icon}</span>
+      <span class="badge-name">${b.name}</span>
+    </div>
+  `).join('');
+}
+
+// ====== テクニックデータ ======
+const TECHNIQUE_DATA = [
+  {
+    cat: '構図', icon: '📐', bg: '',
+    title: '三分割法', sub: '写真を9分割して配置する基本法則',
+    tips: [
+      { title: '三分割法とは？', text: '画面を縦横それぞれ3等分にする線を引いて、その交点に被写体を置く構図法です。中央に置くより自然でダイナミックな写真になります。' },
+      { title: 'iPhoneでの設定', text: '「設定→カメラ→グリッド」をオンにすると三分割のガイド線が表示されます。被写体をその交点に合わせてシャッターを切ってみよう！' },
+    ]
+  },
+  {
+    cat: '構図', icon: '📐', bg: '',
+    title: '日の丸構図', sub: '被写体を中央に堂々と配置する',
+    tips: [
+      { title: '日の丸構図の使いどき', text: '花のアップや正面の人物など、「これが主役！」と伝えたいときに有効です。背景をシンプルにするとより引き立ちます。' },
+    ]
+  },
+  {
+    cat: '構図', icon: '📐', bg: '',
+    title: 'フレーミング', sub: '木の枝や窓枠で被写体を囲む',
+    tips: [
+      { title: 'フレームを探す', text: '木のアーチ、窓の枠、トンネルなど、被写体を自然に囲む「額縁」を探してみよう。奥行き感と立体感が一気にアップします。' },
+    ]
+  },
+  {
+    cat: '明るさ', icon: '☀️', bg: 'green-bg',
+    title: '露出補正の使い方', sub: 'タップで明るさをコントロール',
+    tips: [
+      { title: 'タップ＋スライド', text: 'iPhoneのカメラで画面をタップするとピントが合い、横に太陽マークが出ます。そのマークを上下にスライドすると明るさを細かく調整できます。' },
+      { title: '暗い場所では', text: '室内や夜景など暗い場所では、画面の明るい部分（窓など）をタップするとバランスが取れた明るさになります。' },
+    ]
+  },
+  {
+    cat: '明るさ', icon: '☀️', bg: 'green-bg',
+    title: 'ゴールデンアワー', sub: '日の出・日没前後の魔法の光',
+    tips: [
+      { title: 'ゴールデンアワーとは', text: '日の出後・日没前の約1時間。太陽が低い位置にあり、オレンジや赤の温かみのある光が差し込みます。この時間帯に撮った写真は自然と映えます。' },
+    ]
+  },
+  {
+    cat: '明るさ', icon: '☀️', bg: 'green-bg',
+    title: '逆光の活かし方', sub: '光を背にして幻想的な雰囲気を出す',
+    tips: [
+      { title: '逆光は実はチャンス', text: '太陽を背に向けた「逆光」撮影は難しいですが、うまく使うと被写体がシルエットになったり、光が広がる「フレア」が幻想的な効果を生みます。' },
+      { title: 'iPhoneの設定', text: 'HDRをオンにして逆光を撮ると、暗い部分と明るい部分の両方を自動調整してくれます。設定→カメラ→スマートHDRをオンに！' },
+    ]
+  },
+  {
+    cat: '色彩', icon: '🎨', bg: '',
+    title: '色の対比を使う', sub: '反対色を組み合わせて印象を強める',
+    tips: [
+      { title: '補色の効果', text: '青×オレンジ、赤×緑など、色相環で反対にある色を組み合わせると互いが引き立ちます。例：青い空とオレンジの夕日、緑の葉と赤い花。' },
+    ]
+  },
+  {
+    cat: '色彩', icon: '🎨', bg: '',
+    title: 'ホワイトバランス', sub: '色温度を調整して雰囲気を作る',
+    tips: [
+      { title: 'iPhoneでの調整', text: 'カメラアプリの撮影後、「編集」で「暖かみ」を上げると温かくオレンジっぽく、下げると涼しくブルーっぽくなります。場面に合わせて調整してみよう。' },
+    ]
+  },
+  {
+    cat: '被写体', icon: '🎯', bg: 'green-bg',
+    title: 'ピント合わせのコツ', sub: '狙った場所にピントをしっかり合わせる',
+    tips: [
+      { title: '被写体をタップ', text: 'iPhoneは画面上の合わせたい場所をタップするだけでピントが合います。複数の人物がいる場合は顔をタップしよう。' },
+      { title: 'AFロックを使う', text: '被写体を長押しするとAEロック（自動露出固定）がかかり、ピントと明るさが固定されます。動いている被写体を撮るときに役立ちます。' },
+    ]
+  },
+  {
+    cat: '被写体', icon: '🎯', bg: 'green-bg',
+    title: 'ポートレートモード', sub: '背景をぼかして被写体を引き立てる',
+    tips: [
+      { title: 'ポートレートモードの使い方', text: 'カメラアプリの「ポートレート」を選択すると背景が自動でぼけます。被写体との距離は50〜150cmくらいが最適です。' },
+      { title: 'ぼけ量の調整', text: '撮影後に「編集」から「深度コントロール」でぼけの強さを後から調整できます。やりすぎると不自然なので注意！' },
+    ]
+  },
+  {
+    cat: '物語性', icon: '✨', bg: '',
+    title: '前景・中景・背景', sub: '3層の奥行きで世界を切り取る',
+    tips: [
+      { title: '3層構造を意識する', text: '手前（前景）・中間（中景）・奥（背景）の3つを意識して配置すると、写真に立体感と奥行きが生まれます。例：手前の花＋人物＋山の景色。' },
+    ]
+  },
+  {
+    cat: '物語性', icon: '✨', bg: '',
+    title: '光と影のドラマ', sub: 'コントラストで物語を作る',
+    tips: [
+      { title: '影を活かす', text: '強い光が当たる場所では必ず影ができます。その影の形が面白いパターンを作ったり、被写体の影を主役にした構図を試してみよう。' },
+      { title: '光の方向', text: '横から当たる「サイドライト」は陰影がはっきり出てドラマチックになります。正面からの光は平面的になりがち。光の方向を意識してみて！' },
+    ]
+  },
+  {
+    cat: '物語性', icon: '✨', bg: '',
+    title: 'ストーリーを込める', sub: '見る人が想像できる余白を作る',
+    tips: [
+      { title: '余白の使い方', text: '被写体の進行方向や視線の先に空間を残すと、見る人が「この先に何があるのかな」と想像できます。構図に余白を意識的に入れてみよう。' },
+    ]
+  },
+];
+
+function selectTechCat(el) {
+  document.querySelectorAll('.tech-cat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentTechCat = el.dataset.cat;
+  renderTechniques();
+}
+
+function renderTechniques(jumpToCat = null) {
+  const list = document.getElementById('technique-list');
+  const filtered = currentTechCat === 'all'
+    ? TECHNIQUE_DATA
+    : TECHNIQUE_DATA.filter(t => t.cat === currentTechCat);
+
+  list.innerHTML = filtered.map((t, i) => `
+    <div class="tech-card" onclick="toggleTechCard(this)">
+      <div class="tech-card-header">
+        <div class="tech-card-icon ${t.bg}">${t.icon}</div>
+        <div>
+          <div class="tech-card-title">${t.title}</div>
+          <div class="tech-card-sub">${t.sub}</div>
+        </div>
+        <svg class="tech-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+      <div class="tech-card-body">
+        ${t.tips.map(tip => `
+          <div class="tech-tip">
+            <div class="tech-tip-title">${tip.title}</div>
+            <div class="tech-tip-text">${tip.text}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleTechCard(el) {
+  const body = el.querySelector('.tech-card-body');
+  const arrow = el.querySelector('.tech-card-arrow');
+  body.classList.toggle('open');
+  arrow.style.transform = body.classList.contains('open') ? 'rotate(90deg)' : '';
+}
+
+function showWeakHint() {
+  if (history.length < 3) {
+    document.getElementById('tech-weak-hint').style.display = 'none';
+    return;
+  }
+  const labels = ['構図', '明るさ', '色彩', '被写体', '物語性'];
+  const recent = history.slice(0, 10);
+  const avgs = labels.map((l, i) => recent.reduce((s, h) => s + (h.scores?.[i] || 0), 0) / recent.length);
+  const minIdx = avgs.indexOf(Math.min(...avgs));
+  const weakLabel = labels[minIdx];
+  document.getElementById('tech-weak-hint').style.display = 'block';
+  document.getElementById('tech-weak-hint-text').textContent = `最近「${weakLabel}」の平均が${avgs[minIdx].toFixed(1)}点と低めです。「${weakLabel}」のテクニックを学んで克服しよう！`;
+}
+
+// ====== ビフォーアフター比較 ======
+function openCompareSelect(target) {
+  compareSelectTarget = target;
+  const overlay = document.getElementById('compare-select-overlay');
+  const title = document.getElementById('compare-select-title');
+  title.textContent = target === 'a' ? 'ビフォーの写真を選択' : 'アフターの写真を選択';
+  const list = document.getElementById('compare-select-list');
+  if (!history.length) {
+    list.innerHTML = '<p style="color:var(--text2);font-size:13px;text-align:center;padding:20px">履歴がありません</p>';
+  } else {
+    list.innerHTML = history.map((h, i) => {
+      const d = new Date(h.date);
+      return `
+        <div onclick="selectCompareEntry(${i})" style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;background:var(--bg3);cursor:pointer;transition:all 0.2s;">
+          <div style="width:48px;height:48px;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--bg2);">
+            ${h.thumb ? `<img src="${h.thumb}" style="width:100%;height:100%;object-fit:cover;">` : ''}
+          </div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:500">${h.genre}</div>
+            <div style="font-size:11px;color:var(--text2)">${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</div>
+          </div>
+          <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--purple-light)">${h.score}</div>
+        </div>
+      `;
+    }).join('');
+  }
+  overlay.classList.remove('hidden');
+}
+
+function selectCompareEntry(idx) {
+  const entry = history[idx];
+  if (compareSelectTarget === 'a') compareEntryA = entry;
+  else compareEntryB = entry;
+  document.getElementById('compare-select-overlay').classList.add('hidden');
+  renderCompareSlot(compareSelectTarget, entry);
+  if (compareEntryA && compareEntryB) renderCompareResult();
+}
+
+function renderCompareSlot(target, entry) {
+  const slot = document.getElementById(`compare-slot-${target}`);
+  const d = new Date(entry.date);
+  const label = target === 'a' ? 'ビフォー' : 'アフター';
+  slot.innerHTML = `
+    ${entry.thumb ? `<img class="slot-img" src="${entry.thumb}" alt="">` : '<div style="flex:1;background:var(--bg3)"></div>'}
+    <div class="slot-footer">
+      <div class="slot-score">${entry.score}</div>
+      <div class="slot-label">${label} · ${d.getMonth()+1}/${d.getDate()}</div>
+    </div>
+  `;
+}
+
+function renderCompareResult() {
+  const a = compareEntryA, b = compareEntryB;
+  const labels = ['構図', '明るさ', '色彩', '被写体', '物語性'];
+  const diff = b.score - a.score;
+  document.getElementById('compare-score-a').textContent = a.score;
+  document.getElementById('compare-score-b').textContent = b.score;
+  const diffEl = document.getElementById('compare-score-diff');
+  diffEl.textContent = (diff >= 0 ? '+' : '') + diff;
+  diffEl.style.color = diff > 0 ? 'var(--green-light)' : diff < 0 ? '#e24b4a' : 'var(--text3)';
+
+  const barsEl = document.getElementById('compare-diff-bars');
+  barsEl.innerHTML = labels.map((l, i) => {
+    const sa = a.scores?.[i] || 0;
+    const sb = b.scores?.[i] || 0;
+    const d = sb - sa;
+    const cls = d > 0 ? 'up' : d < 0 ? 'down' : 'same';
+    return `
+      <div class="compare-diff-row">
+        <span class="compare-diff-label">${l}</span>
+        <div class="compare-diff-bars">
+          <div class="compare-bar-before" style="width:${sa/20*100}%"></div>
+          <div class="compare-bar-after" style="width:${sb/20*100}%"></div>
+        </div>
+        <span class="compare-diff-val ${cls}">${d >= 0 ? '+' : ''}${d}</span>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('compare-result-section').style.display = 'block';
+  setTimeout(() => {
+    document.querySelectorAll('.compare-bar-before, .compare-bar-after').forEach(el => {
+      const w = el.style.width;
+      el.style.width = '0%';
+      setTimeout(() => el.style.width = w, 50);
+    });
+  }, 100);
+}
+
+function closeCompareSelect(e) {
+  if (e.target === document.getElementById('compare-select-overlay')) {
+    document.getElementById('compare-select-overlay').classList.add('hidden');
+  }
+}
+
+// ====== 週次AIレポート ======
+async function generateWeeklyReport() {
+  const apiKey = localStorage.getItem('sg_api_key');
+  if (!apiKey) { alert('設定からAPIキーを入力してください'); return; }
+  if (history.length < 3) { alert('3枚以上採点してからレポートを生成してください'); return; }
+
+  const btn = document.getElementById('weekly-report-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg class="spin" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 生成中...';
+
+  const now = new Date();
+  const weekAgo = new Date(now - 7 * 86400000);
+  const weekEntries = history.filter(h => new Date(h.date) >= weekAgo);
+  const allEntries = history.slice(0, 20);
+
+  const summary = allEntries.map(h => `スコア:${h.score} ジャンル:${h.genre} (${new Date(h.date).toLocaleDateString('ja-JP')})`).join('\n');
+  const prompt = `あなたは写真コーチです。以下は中学生の撮影スキル向上アプリの採点ログです。
+直近の採点記録：
+${summary}
+
+この記録を見て、以下の内容で週次レポートを書いてください：
+1. 今週（または直近）の総評（2〜3文）
+2. 一番成長したポイント（具体的に1つ）
+3. 来週取り組むべき課題（具体的に1つ）
+4. 励ましのメッセージ（1文）
+
+中学生にわかりやすい言葉で、全体で200字程度にまとめてください。`;
+
+  try {
+    const data = await callOpenRouterWithFallback({
+      apiKey,
+      models: ['openrouter/free', 'mistralai/mistral-small-3.1-24b-instruct:free', 'qwen/qwen2.5-vl-32b-instruct:free'],
+      max_tokens: 512,
+      temperature: 0.7,
+      messages: [{ role: 'user', content: prompt }]
+    });
+    const text = normalizeMessageContent(data?.choices?.[0]?.message?.content) || '';
+    if (!text) throw new Error('レポートの生成に失敗しました');
+
+    const report = { text, date: new Date().toISOString() };
+    localStorage.setItem('sg_weekly_report', JSON.stringify(report));
+    showWeeklyReport(report);
+  } catch(e) {
+    alert('レポートの生成に失敗しました：' + e.message.slice(0, 80));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> AIに週次レポートを書いてもらう';
+  }
+}
+
+function showWeeklyReport(report) {
+  const d = new Date(report.date);
+  document.getElementById('weekly-report-date').textContent = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} 生成`;
+  document.getElementById('weekly-report-body').innerHTML = report.text.replace(/\n/g, '<br>');
+  document.getElementById('weekly-report-display').style.display = 'block';
+}
+
+function loadWeeklyReport() {
+  const saved = localStorage.getItem('sg_weekly_report');
+  if (saved) {
+    try { showWeeklyReport(JSON.parse(saved)); } catch(e) {}
+  }
+}
+
+// ====== UTILS ======
 function isHttpOrigin() {
   return location.protocol === 'http:' || location.protocol === 'https:';
 }
-
 function assertRunnableOrigin() {
   if (location.protocol === 'file:') {
-    throw new Error('このHTMLをファイル直開き(file://)しているため、API通信が失敗する可能性があります。GitHub Pages か http://localhost などのローカルサーバー経由で開いてください。');
+    throw new Error('file://直開きのため通信できません。GitHub Pages経由で開いてください。');
   }
 }
-
 function getOpenRouterHeaders(apiKey) {
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiKey}`
-  };
-
-  if (isHttpOrigin()) {
-    headers['HTTP-Referer'] = location.href;
-    headers['X-OpenRouter-Title'] = 'SnapGrow';
-  }
-
+  const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
+  if (isHttpOrigin()) { headers['HTTP-Referer'] = location.href; headers['X-OpenRouter-Title'] = 'SnapGrow'; }
   return headers;
 }
-
 function normalizeMessageContent(content) {
   if (typeof content === 'string') return content;
   if (Array.isArray(content)) {
-    return content.map(part => {
-      if (typeof part === 'string') return part;
-      if (part?.type === 'text') return part.text || '';
-      return '';
-    }).join('\n').trim();
+    return content.map(p => (typeof p === 'string' ? p : p?.type === 'text' ? p.text || '' : '')).join('\n').trim();
   }
   return '';
 }
-
 async function callOpenRouterWithFallback({ apiKey, models, messages, max_tokens = 1024, temperature }) {
   assertRunnableOrigin();
-
   let lastError = null;
-
   for (const model of models) {
     try {
-      const body = {
-        model,
-        messages,
-        max_tokens,
-        stream: false
-      };
-
+      const body = { model, messages, max_tokens, stream: false };
       if (typeof temperature === 'number') body.temperature = temperature;
-
-      const res = await fetch(OPENROUTER_URL, {
-        method: 'POST',
-        headers: getOpenRouterHeaders(apiKey),
-        body: JSON.stringify(body)
-      });
-
+      const res = await fetch(OPENROUTER_URL, { method: 'POST', headers: getOpenRouterHeaders(apiKey), body: JSON.stringify(body) });
       const raw = await res.text();
       let data = null;
-      try {
-        data = raw ? JSON.parse(raw) : null;
-      } catch {
-        throw Object.assign(new Error(`[${model}] HTTP ${res.status}: ${raw.slice(0, 300) || 'レスポンスが空でした'}`), { status: res.status });
-      }
-
-      if (!res.ok) {
-        const msg = data?.error?.message || data?.message || `HTTP ${res.status}`;
-        throw Object.assign(new Error(`[${model}] ${msg}`), { status: res.status, data });
-      }
-
-      if (data?.error) {
-        throw Object.assign(new Error(`[${model}] ${data.error.message || 'APIエラー'}`), { status: res.status, data });
-      }
-
+      try { data = raw ? JSON.parse(raw) : null; } catch { throw Object.assign(new Error(`[${model}] HTTP ${res.status}: ${raw.slice(0,300)||'空'}`), { status: res.status }); }
+      if (!res.ok) { const msg = data?.error?.message || `HTTP ${res.status}`; throw Object.assign(new Error(`[${model}] ${msg}`), { status: res.status, data }); }
+      if (data?.error) throw Object.assign(new Error(`[${model}] ${data.error.message||'APIエラー'}`), { status: res.status, data });
       return data;
-    } catch (err) {
+    } catch(err) {
       lastError = err;
-      if ([401, 402, 403].includes(err?.status)) break;
+      if ([401,402,403].includes(err?.status)) break;
     }
   }
-
   throw lastError || new Error('OpenRouter APIの呼び出しに失敗しました');
 }
 
 // ====== INIT ======
 window.addEventListener('load', () => {
-  // 古いService Workerを全て削除してキャッシュをクリア
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(regs => {
-      regs.forEach(reg => reg.unregister());
-    });
-    caches.keys().then(keys => {
-      keys.forEach(key => caches.delete(key));
-    });
+    navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+    caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
   }
   loadData();
   applyTheme(localStorage.getItem('sg_theme') || 'dark');
   const apiKey = localStorage.getItem('sg_api_key');
   if (apiKey) document.getElementById('api-key-input').value = apiKey;
   updateHome();
+  renderHomeBadges();
+  renderTechniques();
 
-  // スプラッシュ
   const splash = document.getElementById('splash');
   const best = getBestEntry();
-  if (best && best.thumb) {
-    document.getElementById('splash-bg').style.backgroundImage = `url(${best.thumb})`;
-  }
-  setTimeout(() => { splash.classList.add('hidden'); }, 2500);
+  if (best && best.thumb) document.getElementById('splash-bg').style.backgroundImage = `url(${best.thumb})`;
+  setTimeout(() => splash.classList.add('hidden'), 2500);
 });
 
 // ====== DATA ======
 function loadData() {
-  try {
-    const raw = localStorage.getItem('sg_history');
-    history = raw ? JSON.parse(raw) : [];
-  } catch(e) {
-    history = [];
-  }
+  try { const raw = localStorage.getItem('sg_history'); history = raw ? JSON.parse(raw) : []; } catch(e) { history = []; }
 }
 function resetScoreScreen() {
   currentImageBase64 = null;
@@ -774,147 +1391,11 @@ function resetScoreScreen() {
   document.getElementById('upload-area').style.pointerEvents = 'auto';
   document.getElementById('file-input').value = '';
 }
-
 function saveData() {
-  try {
-    localStorage.setItem('sg_history', JSON.stringify(history));
-  } catch(e) {
-    // LocalStorage満杯時は古い履歴を削除して再試行
+  try { localStorage.setItem('sg_history', JSON.stringify(history)); } catch(e) {
     history = history.slice(0, 20);
     try { localStorage.setItem('sg_history', JSON.stringify(history)); } catch(e2) {}
   }
-}
-function saveApiKey() {
-  localStorage.setItem('sg_api_key', document.getElementById('api-key-input').value.trim());
-}
-
-// ====== お題選択式 ======
-const ODAI_BANK = {
-  '風景・自然': [
-    '空と雲だけを主役にした写真を撮ろう',
-    '木の葉や花をアップで撮ってみよう',
-    '水たまりや川の反射を使った写真を撮ろう',
-    '夕暮れや朝の光を使った写真に挑戦しよう',
-    '影や光のコントラストを意識して撮ろう',
-    '身近な植物や草花を主役にしよう',
-    '空を背景に何かをシルエットで撮ろう',
-  ],
-  'ポートレート': [
-    '笑顔の瞬間を自然に撮ってみよう',
-    '後ろ姿や横顔を撮ってみよう',
-    '手や足など体の一部をアップで撮ろう',
-    '窓からの光を使って人を撮ろう',
-    '人物と背景のボケ感を意識して撮ろう',
-    '動いている瞬間をとらえてみよう',
-  ],
-  '街・スナップ': [
-    '看板や文字が入った街の風景を撮ろう',
-    '人が少ない早朝の街を撮ってみよう',
-    '建物の形や模様をアップで撮ろう',
-    '自転車や乗り物を主役にしよう',
-    '商店街やお店の雰囲気を切り取ろう',
-    '階段や橋などの構造物を面白く撮ろう',
-    '道路や歩道のラインを使った構図を試そう',
-  ]
-};
-
-let currentOdaiChoices = [];
-let selectedOdaiIndex = -1;
-
-function renderOdaiChoices() {
-  const bank = ODAI_BANK[selectedGenre] || ODAI_BANK['風景・自然'];
-  const shuffled = [...bank].sort(() => Math.random() - 0.5).slice(0, 4);
-  currentOdaiChoices = shuffled;
-  selectedOdaiIndex = -1;
-  currentOdai = null;
-  const container = document.getElementById('odai-choices');
-  container.innerHTML = shuffled.map((odai, i) => `
-    <div onclick="selectOdai(${i})" id="odai-choice-${i}" style="
-      padding:12px 14px;border-radius:12px;border:0.5px solid var(--border);
-      background:var(--bg3);cursor:pointer;font-size:13px;color:var(--text);
-      transition:all 0.2s;line-height:1.5;
-    ">${odai}</div>
-  `).join('');
-}
-
-function selectOdai(i) {
-  selectedOdaiIndex = i;
-  currentOdai = currentOdaiChoices[i];
-  currentOdaiChoices.forEach((_, idx) => {
-    const el = document.getElementById('odai-choice-' + idx);
-    if (!el) return;
-    el.style.background = idx === i ? 'var(--purple-dark)' : 'var(--bg3)';
-    el.style.borderColor = idx === i ? 'var(--purple)' : 'var(--border)';
-    el.style.color = idx === i ? 'var(--purple-light)' : 'var(--text)';
-  });
-}
-
-function refreshOdaiChoices() {
-  renderOdaiChoices();
-}
-
-// ====== 履歴詳細モーダル ======
-function openHistoryModal(entry) {
-  const imgSrc = entry.thumb || '';
-  const modalImg = document.getElementById('modal-img');
-  modalImg.src = imgSrc;
-  modalImg.style.display = imgSrc ? 'block' : 'none';
-  document.getElementById('modal-score').textContent = entry.score;
-  document.getElementById('modal-tag').innerHTML = `<span class="tag purple">${entry.genre}</span>${entry.mode==='odai'?' <span class="tag green">お題</span>':''}`;
-  const d = new Date(entry.date);
-  document.getElementById('modal-date').textContent = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-  const labels = ['構図','明るさ','色彩','被写体','物語性'];
-  document.getElementById('modal-bars').innerHTML = (entry.scores||[]).map((s,i) => `
-    <div class="item-row">
-      <span class="item-label">${labels[i]}</span>
-      <div class="bar-wrap"><div class="bar-fill" style="width:${s/20*100}%"></div></div>
-      <span class="item-val">${s}</span>
-    </div>
-  `).join('');
-  const iphoneHint = entry.iPhone操作ヒント || '';
-  document.getElementById('modal-advice').innerHTML = `
-    <p style="margin-bottom:10px"><strong style="color:var(--green-light)">良かった点</strong><br>${entry.良かった点||'-'}</p>
-    <p style="margin-bottom:10px"><strong style="color:var(--purple-light)">改善ポイント</strong><br>${entry.改善ポイント||'-'}</p>
-    ${iphoneHint ? `<p style="margin-bottom:10px;background:rgba(127,119,221,0.08);border-radius:10px;padding:10px;"><strong style="color:var(--purple-light)">📱 iPhoneカメラのヒント</strong><br>${iphoneHint}</p>` : ''}
-    <p><strong style="color:var(--text2)">次のチャレンジ</strong><br>${entry.次のチャレンジ||'-'}</p>
-  `;
-  const overlay = document.getElementById('history-modal-overlay');
-  overlay.classList.remove('hidden');
-}
-
-function closeHistoryModal(e) {
-  if (e.target === document.getElementById('history-modal-overlay')) {
-    document.getElementById('history-modal-overlay').classList.add('hidden');
-  }
-}
-
-// ====== 成長サマリー ======
-function calcGrowthSummary() {
-  if (history.length < 2) return '採点を重ねると成長のポイントが表示されます。';
-  const recent = history.slice(0, Math.min(5, history.length));
-  const old = history.slice(-Math.min(5, history.length));
-  const labels = ['構図','明るさ','色彩','被写体','物語性'];
-  const recentAvg = labels.map((_, i) => recent.reduce((s,h) => s+(h.scores?.[i]||0), 0) / recent.length);
-  const oldAvg = labels.map((_, i) => old.reduce((s,h) => s+(h.scores?.[i]||0), 0) / old.length);
-  const diffs = labels.map((l, i) => ({ label: l, diff: recentAvg[i] - oldAvg[i] }));
-  const improved = diffs.filter(d => d.diff > 0.5).sort((a,b) => b.diff - a.diff);
-  const weakest = diffs.sort((a,b) => a.diff - b.diff)[0];
-  let summary = '';
-  if (improved.length > 0) {
-    summary += `<span style="color:var(--green-light)">📈 最近伸びているのは「${improved.map(d=>d.label).join('・')}」です！</span><br>`;
-  }
-  const totalRecent = recent.reduce((s,h)=>s+h.score,0)/recent.length;
-  const totalOld = old.reduce((s,h)=>s+h.score,0)/old.length;
-  const totalDiff = Math.round(totalRecent - totalOld);
-  if (totalDiff > 0) {
-    summary += `<span style="color:var(--purple-light)">総合スコアが平均${totalDiff}点アップしています！</span><br>`;
-  } else if (totalDiff < 0) {
-    summary += `<span style="color:var(--text2)">総合スコアはまだ伸びしろがあります。</span><br>`;
-  }
-  if (weakest && weakest.diff < -0.3) {
-    summary += `<span style="color:var(--text2)">💡「${weakest.label}」を意識して練習するとさらに上達しそうです。</span>`;
-  }
-  return summary || '着実に上達しています！この調子で続けよう。';
 }
 function saveApiKeyBtn() {
   const key = document.getElementById('api-key-input').value.trim();
@@ -931,14 +1412,11 @@ function getBestEntry() {
 
 // ====== THEME ======
 function setTheme(t) {
-  applyTheme(t);
-  localStorage.setItem('sg_theme', t);
+  applyTheme(t); localStorage.setItem('sg_theme', t);
   document.getElementById('theme-dark').classList.toggle('selected', t === 'dark');
   document.getElementById('theme-light').classList.toggle('selected', t === 'light');
 }
-function applyTheme(t) {
-  document.documentElement.setAttribute('data-theme', t);
-}
+function applyTheme(t) { document.documentElement.setAttribute('data-theme', t); }
 
 // ====== NAVIGATION ======
 function showScreen(name, fromLeft = false) {
@@ -946,27 +1424,28 @@ function showScreen(name, fromLeft = false) {
   const next = document.getElementById(`screen-${name}`);
   if (!next) return;
   prev.classList.add('hidden');
-  if (fromLeft) next.classList.add('from-left');
-  else next.classList.remove('from-left');
+  if (fromLeft) next.classList.add('from-left'); else next.classList.remove('from-left');
   next.classList.remove('hidden');
   currentScreen = name;
 
-  // nav active
-  ['home','history','growth','settings'].forEach(n => {
+  ['home','history','growth','technique','settings'].forEach(n => {
     document.getElementById(`nav-${n}`)?.classList.toggle('active', n === name);
   });
-  document.getElementById('nav').style.display = ['score','result'].includes(name) ? 'none' : 'flex';
+  document.getElementById('nav').style.display = ['score','result','compare'].includes(name) ? 'none' : 'flex';
 
-  if (name === 'growth') renderGrowth();
+  if (name === 'growth') { renderGrowth(); loadWeeklyReport(); }
   if (name === 'history') renderHistory();
-  if (name === 'settings') {
-    const k = localStorage.getItem('sg_api_key');
-    if (k) document.getElementById('api-key-input').value = k;
+  if (name === 'technique') { renderTechniques(); showWeakHint(); }
+  if (name === 'settings') { const k = localStorage.getItem('sg_api_key'); if (k) document.getElementById('api-key-input').value = k; }
+  if (name === 'compare') {
+    compareEntryA = null; compareEntryB = null;
+    document.getElementById('compare-slot-a').innerHTML = '<div class="slot-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>ビフォー<br>タップして選択</span></div>';
+    document.getElementById('compare-slot-b').innerHTML = '<div class="slot-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>アフター<br>タップして選択</span></div>';
+    document.getElementById('compare-result-section').style.display = 'none';
   }
 }
 function goBack() {
-  currentOdai = null;
-  currentImageBase64 = null;
+  currentOdai = null; currentImageBase64 = null;
   document.getElementById('preview-section').style.display = 'none';
   document.getElementById('upload-area').style.display = 'block';
   document.getElementById('file-input').value = '';
@@ -978,7 +1457,6 @@ function updateHome() {
   const today = new Date().toDateString();
   const todayEntries = history.filter(h => new Date(h.date).toDateString() === today);
   const best = todayEntries.length ? todayEntries.reduce((a,b) => a.score>b.score?a:b) : null;
-
   if (best) {
     document.getElementById('hero-score').textContent = best.score;
     document.getElementById('hero-sub').textContent = `${best.genre} ・ ${todayEntries.length}枚採点済み`;
@@ -986,36 +1464,93 @@ function updateHome() {
     badge.textContent = best.genre; badge.style.display = 'inline-block';
     if (best.thumb) document.getElementById('hero-bg').style.backgroundImage = `url(${best.thumb})`;
   }
-
   const allBest = getBestEntry();
-  if (allBest && allBest.thumb) {
-    document.getElementById('hero-bg').style.backgroundImage = `url(${allBest.thumb})`;
-  }
-
+  if (allBest && allBest.thumb) document.getElementById('hero-bg').style.backgroundImage = `url(${allBest.thumb})`;
   document.getElementById('stat-count').textContent = history.length;
   document.getElementById('stat-best').textContent = allBest ? allBest.score : '--';
-
-  // 継続日数
   const days = new Set(history.map(h => new Date(h.date).toDateString())).size;
   document.getElementById('stat-days').textContent = days;
+  renderHomeBadges();
+}
+
+// ====== お題 ======
+const ODAI_BANK = {
+  '風景・自然': ['空と雲だけを主役にした写真を撮ろう','木の葉や花をアップで撮ってみよう','水たまりや川の反射を使った写真を撮ろう','夕暮れや朝の光を使った写真に挑戦しよう','影や光のコントラストを意識して撮ろう','身近な植物や草花を主役にしよう','空を背景に何かをシルエットで撮ろう'],
+  'ポートレート': ['笑顔の瞬間を自然に撮ってみよう','後ろ姿や横顔を撮ってみよう','手や足など体の一部をアップで撮ろう','窓からの光を使って人を撮ろう','人物と背景のボケ感を意識して撮ろう','動いている瞬間をとらえてみよう'],
+  '街・スナップ': ['看板や文字が入った街の風景を撮ろう','人が少ない早朝の街を撮ってみよう','建物の形や模様をアップで撮ろう','自転車や乗り物を主役にしよう','商店街やお店の雰囲気を切り取ろう','階段や橋などの構造物を面白く撮ろう','道路や歩道のラインを使った構図を試そう'],
+};
+let currentOdaiChoices = [], selectedOdaiIndex = -1;
+function renderOdaiChoices() {
+  const bank = ODAI_BANK[selectedGenre] || ODAI_BANK['風景・自然'];
+  const shuffled = [...bank].sort(() => Math.random() - 0.5).slice(0, 4);
+  currentOdaiChoices = shuffled; selectedOdaiIndex = -1; currentOdai = null;
+  const container = document.getElementById('odai-choices');
+  container.innerHTML = shuffled.map((odai, i) => `<div onclick="selectOdai(${i})" id="odai-choice-${i}" style="padding:12px 14px;border-radius:12px;border:0.5px solid var(--border);background:var(--bg3);cursor:pointer;font-size:13px;color:var(--text);transition:all 0.2s;line-height:1.5;">${odai}</div>`).join('');
+}
+function selectOdai(i) {
+  selectedOdaiIndex = i; currentOdai = currentOdaiChoices[i];
+  currentOdaiChoices.forEach((_, idx) => {
+    const el = document.getElementById('odai-choice-' + idx);
+    if (!el) return;
+    el.style.background = idx === i ? 'var(--purple-dark)' : 'var(--bg3)';
+    el.style.borderColor = idx === i ? 'var(--purple)' : 'var(--border)';
+    el.style.color = idx === i ? 'var(--purple-light)' : 'var(--text)';
+  });
+}
+function refreshOdaiChoices() { renderOdaiChoices(); }
+
+// ====== 履歴詳細モーダル ======
+function openHistoryModal(entry) {
+  const imgSrc = entry.thumb || '';
+  const modalImg = document.getElementById('modal-img');
+  modalImg.src = imgSrc; modalImg.style.display = imgSrc ? 'block' : 'none';
+  document.getElementById('modal-score').textContent = entry.score;
+  document.getElementById('modal-tag').innerHTML = `<span class="tag purple">${entry.genre}</span>${entry.mode==='odai'?' <span class="tag green">お題</span>':''}`;
+  const d = new Date(entry.date);
+  document.getElementById('modal-date').textContent = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const labels = ['構図','明るさ','色彩','被写体','物語性'];
+  document.getElementById('modal-bars').innerHTML = (entry.scores||[]).map((s,i) => `<div class="item-row"><span class="item-label">${labels[i]}</span><div class="bar-wrap"><div class="bar-fill" style="width:${s/20*100}%"></div></div><span class="item-val">${s}</span></div>`).join('');
+  const iphoneHint = entry.iPhone操作ヒント || '';
+  document.getElementById('modal-advice').innerHTML = `<p style="margin-bottom:10px"><strong style="color:var(--green-light)">良かった点</strong><br>${entry.良かった点||'-'}</p><p style="margin-bottom:10px"><strong style="color:var(--purple-light)">改善ポイント</strong><br>${entry.改善ポイント||'-'}</p>${iphoneHint?`<p style="margin-bottom:10px;background:rgba(127,119,221,0.08);border-radius:10px;padding:10px;"><strong style="color:var(--purple-light)">📱 iPhoneカメラのヒント</strong><br>${iphoneHint}</p>`:''}<p><strong style="color:var(--text2)">次のチャレンジ</strong><br>${entry.次のチャレンジ||'-'}</p>`;
+  document.getElementById('history-modal-overlay').classList.remove('hidden');
+}
+function closeHistoryModal(e) {
+  if (e.target === document.getElementById('history-modal-overlay')) document.getElementById('history-modal-overlay').classList.add('hidden');
+}
+
+// ====== 成長サマリー ======
+function calcGrowthSummary() {
+  if (history.length < 2) return '採点を重ねると成長のポイントが表示されます。';
+  const recent = history.slice(0, Math.min(5, history.length));
+  const old = history.slice(-Math.min(5, history.length));
+  const labels = ['構図','明るさ','色彩','被写体','物語性'];
+  const recentAvg = labels.map((_,i) => recent.reduce((s,h)=>s+(h.scores?.[i]||0),0)/recent.length);
+  const oldAvg = labels.map((_,i) => old.reduce((s,h)=>s+(h.scores?.[i]||0),0)/old.length);
+  const diffs = labels.map((l,i)=>({label:l,diff:recentAvg[i]-oldAvg[i]}));
+  const improved = diffs.filter(d=>d.diff>0.5).sort((a,b)=>b.diff-a.diff);
+  const weakest = [...diffs].sort((a,b)=>a.diff-b.diff)[0];
+  let summary = '';
+  if (improved.length>0) summary += `<span style="color:var(--green-light)">📈 最近伸びているのは「${improved.map(d=>d.label).join('・')}」です！</span><br>`;
+  const totalRecent = recent.reduce((s,h)=>s+h.score,0)/recent.length;
+  const totalOld = old.reduce((s,h)=>s+h.score,0)/old.length;
+  const totalDiff = Math.round(totalRecent-totalOld);
+  if (totalDiff>0) summary += `<span style="color:var(--purple-light)">総合スコアが平均${totalDiff}点アップしています！</span><br>`;
+  else if (totalDiff<0) summary += `<span style="color:var(--text2)">総合スコアはまだ伸びしろがあります。</span><br>`;
+  if (weakest && weakest.diff<-0.3) summary += `<span style="color:var(--text2)">💡「${weakest.label}」を意識して練習するとさらに上達しそうです。</span>`;
+  return summary || '着実に上達しています！この調子で続けよう。';
 }
 
 // ====== MODE ======
 function startFreeMode() {
-  currentMode = 'free';
-  currentImageBase64 = null;
-  resetGenre();
+  currentMode = 'free'; currentImageBase64 = null; resetGenre();
   document.getElementById('odai-section').style.display = 'none';
   document.getElementById('preview-section').style.display = 'none';
   document.getElementById('upload-area').style.display = 'block';
   document.getElementById('file-input').value = '';
   showScreen('score');
 }
-
 async function startOdaiMode() {
-  currentMode = 'odai';
-  currentImageBase64 = null;
-  resetGenre();
+  currentMode = 'odai'; currentImageBase64 = null; resetGenre();
   document.getElementById('odai-section').style.display = 'block';
   document.getElementById('preview-section').style.display = 'none';
   document.getElementById('upload-area').style.display = 'block';
@@ -1023,57 +1558,19 @@ async function startOdaiMode() {
   showScreen('score');
   renderOdaiChoices();
 }
-
 function resetGenre() {
   selectedGenre = '風景・自然';
-  document.querySelectorAll('.genre-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  document.querySelectorAll('.genre-btn').forEach((b,i) => b.classList.toggle('active', i===0));
 }
-
-async function generateOdai() {
-  const apiKey = localStorage.getItem('sg_api_key');
-  if (!apiKey) {
-    document.getElementById('odai-text').textContent = '設定からAPIキーを入力してください';
-    document.getElementById('upload-area').style.opacity = '0.4';
-    document.getElementById('upload-area').style.pointerEvents = 'none';
-    return;
-  }
-
-  document.getElementById('upload-area').style.opacity = '1';
-  document.getElementById('upload-area').style.pointerEvents = 'auto';
-
-  const genre = selectedGenre;
-  const prompt = `あなたは写真のお題を出す先生です。スマホで撮影できる「${genre}」ジャンルのお題を1つ、短く具体的に日本語で出してください。中学生でも挑戦できる内容にしてください。お題だけを1〜2文で答えてください。例：「逆光の中で葉っぱのシルエットを撮ろう」`;
-
-  try {
-    const data = await callOpenRouterWithFallback({
-      apiKey,
-      models: ['openrouter/free', 'mistralai/mistral-small-3.1-24b-instruct:free', 'qwen/qwen2.5-vl-32b-instruct:free'],
-      max_tokens: 256,
-      temperature: 0.7,
-      messages: [{ role: 'user', content: prompt }]
-    });
-
-    const text = normalizeMessageContent(data?.choices?.[0]?.message?.content) || 'お題の生成に失敗しました';
-    currentOdai = text.trim();
-    document.getElementById('odai-text').textContent = currentOdai;
-    document.getElementById('odai-genre').textContent = genre;
-  } catch (e) {
-    document.getElementById('odai-text').textContent = 'お題の生成に失敗しました：' + e.message;
-  }
-}
-
-// ====== GENRE ======
 function selectGenre(el) {
   document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  selectedGenre = el.dataset.genre;
+  el.classList.add('active'); selectedGenre = el.dataset.genre;
   if (currentMode === 'odai') renderOdaiChoices();
 }
 
 // ====== FILE UPLOAD ======
 function handleFile(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = (ev) => {
     compressImage(ev.target.result, 1200, 0.85, (compressed) => {
@@ -1085,256 +1582,126 @@ function handleFile(e) {
   };
   reader.readAsDataURL(file);
 }
-
 function compressImage(src, maxSize, quality, callback) {
   const img = new Image();
-  img.onerror = () => callback(src); // 失敗時は元画像をそのまま使用
+  img.onerror = () => callback(src);
   img.onload = () => {
     const canvas = document.createElement('canvas');
     let w = img.width, h = img.height;
-    if (w > maxSize || h > maxSize) {
-      if (w > h) { h = h * maxSize / w; w = maxSize; }
-      else { w = w * maxSize / h; h = maxSize; }
-    }
+    if (w > maxSize || h > maxSize) { if (w>h) { h=h*maxSize/w; w=maxSize; } else { w=w*maxSize/h; h=maxSize; } }
     canvas.width = w; canvas.height = h;
     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
     callback(canvas.toDataURL('image/jpeg', quality));
   };
   img.src = src;
 }
-
-function compressForStorage(src, callback) {
-  compressImage(src, 300, 0.5, callback); // より強く圧縮して容量節約
-}
+function compressForStorage(src, callback) { compressImage(src, 300, 0.5, callback); }
 
 // ====== ANALYZE ======
 async function analyzePhoto() {
   const apiKey = localStorage.getItem('sg_api_key');
-  console.log('APIキー確認:', apiKey ? '取得OK (長さ:'+apiKey.length+')' : '未設定');
   if (!apiKey) { alert('設定からOpenRouter APIキーを入力してください'); return; }
   if (!currentImageBase64) { alert('写真を選んでください'); return; }
-
   const btn = document.getElementById('analyze-btn');
   btn.disabled = true;
   btn.innerHTML = '<svg class="spin" style="width:18px;height:18px;vertical-align:middle;margin-right:6px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>採点中...';
-
   const odaiText = currentMode === 'odai' && currentOdai ? `\nお題：「${currentOdai}」` : '';
   if (currentMode === 'odai' && !currentOdai) { alert('お題を選んでください'); btn.disabled=false; btn.textContent='AIに採点してもらう'; return; }
-  const prompt = `あなたは写真の先生です。この写真を「${selectedGenre}」ジャンルとして採点してください。${odaiText}
-
-スマホで撮影した写真を想定し、中学生にもわかるやさしい言葉でアドバイスしてください。
-
-以下のJSON形式だけで回答してください（他の文章は不要）：
-{
-  "構図": <0〜20の整数>,
-  "明るさ": <0〜20の整数>,
-  "色彩": <0〜20の整数>,
-  "被写体": <0〜20の整数>,
-  "物語性": <0〜20の整数>,
-  "良かった点": "<まず褒める。具体的に2〜3文で>",
-  "改善ポイント": "<具体的な改善内容を2〜3文で>",
-  "iPhone操作ヒント": "<iPhoneカメラの具体的な操作方法。例：画面をタップしてピントを合わせる、タップ後に太陽マークを上下にスライドして明るさを調整するなど。2文>",
-  "次のチャレンジ": "<次に試してほしいこと1文>"
-}`;
-
+  const prompt = `あなたは写真の先生です。この写真を「${selectedGenre}」ジャンルとして採点してください。${odaiText}\n\nスマホで撮影した写真を想定し、中学生にもわかるやさしい言葉でアドバイスしてください。\n\n以下のJSON形式だけで回答してください（他の文章は不要）：\n{\n  "構図": <0〜20の整数>,\n  "明るさ": <0〜20の整数>,\n  "色彩": <0〜20の整数>,\n  "被写体": <0〜20の整数>,\n  "物語性": <0〜20の整数>,\n  "良かった点": "<まず褒める。具体的に2〜3文で>",\n  "改善ポイント": "<具体的な改善内容を2〜3文で>",\n  "iPhone操作ヒント": "<iPhoneカメラの具体的な操作方法。2文>",\n  "次のチャレンジ": "<次に試してほしいこと1文>"\n}`;
   try {
     const data = await callOpenRouterWithFallback({
       apiKey,
-      models: [
-        'openrouter/free',
-        'mistralai/mistral-small-3.1-24b-instruct:free',
-        'qwen/qwen2.5-vl-32b-instruct:free',
-        'moonshotai/kimi-vl-a3b-thinking:free'
-      ],
+      models: ['openrouter/free','mistralai/mistral-small-3.1-24b-instruct:free','qwen/qwen2.5-vl-32b-instruct:free','moonshotai/kimi-vl-a3b-thinking:free'],
       max_tokens: 1024,
-      messages: [{
-        role: 'user',
-        content: [
-          {type: 'image_url', image_url: {url: `data:image/jpeg;base64,${currentImageBase64}`}},
-          {type: 'text', text: prompt}
-        ]
-      }]
+      messages: [{ role: 'user', content: [{ type:'image_url', image_url:{ url:`data:image/jpeg;base64,${currentImageBase64}` } }, { type:'text', text:prompt }] }]
     });
     let text = normalizeMessageContent(data?.choices?.[0]?.message?.content) || '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('AIの返答からJSONを取得できませんでした:\n' + text.slice(0, 200));
+    if (!jsonMatch) throw new Error('JSONを取得できませんでした:\n' + text.slice(0,200));
     const result = JSON.parse(jsonMatch[0]);
     showResult(result);
   } catch(e) {
     const errMsg = e.message || '不明なエラー';
-    // モデルエラーは自動リトライ対象外
     if (errMsg.includes('No endpoints') || errMsg.includes('not a valid model')) {
-      alert('採点に失敗しました。\n\nAIモデルが一時的に利用できません。\nしばらく待ってからもう一度お試しください。\n\n（' + errMsg.slice(0,80) + '）');
+      alert('採点に失敗しました。\n\nAIモデルが一時的に利用できません。\nしばらく待ってから再度お試しください。\n\n（' + errMsg.slice(0,80) + '）');
     } else {
       alert('採点に失敗しました。\n\nエラー：' + errMsg.slice(0,100) + '\n\n少し待ってから再度お試しください。');
     }
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'AIに採点してもらう';
-  }}
+    btn.disabled = false; btn.textContent = 'AIに採点してもらう';
+  }
+}
 
 // ====== RESULT ======
 function showResult(result) {
-  const scores = [result['構図'], result['明るさ'], result['色彩'], result['被写体'], result['物語性']];
-  const total = scores.reduce((a,b) => a+b, 0);
-
+  const scores = [result['構図'],result['明るさ'],result['色彩'],result['被写体'],result['物語性']];
+  const total = scores.reduce((a,b)=>a+b,0);
   showScreen('result');
   document.getElementById('result-score').textContent = total;
   document.getElementById('result-genre-tag').innerHTML = `<span class="tag purple">${selectedGenre}</span>`;
-
   const resultImg = document.getElementById('result-preview');
   resultImg.innerHTML = `<img src="data:image/jpeg;base64,${currentImageBase64}" alt="採点写真">`;
-  scores.forEach((s, i) => {
-    document.getElementById(`val-${i}`).textContent = s;
-    setTimeout(() => {
-      document.getElementById(`bar-${i}`).style.width = `${s/20*100}%`;
-    }, 100 + i*100);
-  });
-
+  scores.forEach((s,i) => { document.getElementById(`val-${i}`).textContent = s; setTimeout(() => { document.getElementById(`bar-${i}`).style.width = `${s/20*100}%`; }, 100+i*100); });
   const iphoneHint = result['iPhone操作ヒント'] || '';
-  const adviceHTML = `
-    <p style="margin-bottom:10px"><strong style="color:var(--green-light)">良かった点</strong><br>${result['良かった点']}</p>
-    <p style="margin-bottom:10px"><strong style="color:var(--purple-light)">改善ポイント</strong><br>${result['改善ポイント']}</p>
-    ${iphoneHint ? `<p style="margin-bottom:10px;background:rgba(127,119,221,0.08);border-radius:10px;padding:10px;"><strong style="color:var(--purple-light)">📱 iPhoneカメラのヒント</strong><br>${iphoneHint}</p>` : ''}
-    <p><strong style="color:var(--text2)">次のチャレンジ</strong><br>${result['次のチャレンジ']}</p>
-  `;
-  document.getElementById('advice-content').innerHTML = adviceHTML;
-
-  // サムネ生成（小さく圧縮）
+  document.getElementById('advice-content').innerHTML = `<p style="margin-bottom:10px"><strong style="color:var(--green-light)">良かった点</strong><br>${result['良かった点']}</p><p style="margin-bottom:10px"><strong style="color:var(--purple-light)">改善ポイント</strong><br>${result['改善ポイント']}</p>${iphoneHint?`<p style="margin-bottom:10px;background:rgba(127,119,221,0.08);border-radius:10px;padding:10px;"><strong style="color:var(--purple-light)">📱 iPhoneカメラのヒント</strong><br>${iphoneHint}</p>`:''}<p><strong style="color:var(--text2)">次のチャレンジ</strong><br>${result['次のチャレンジ']}</p>`;
   const imgSrc = `data:image/jpeg;base64,${currentImageBase64}`;
   compressForStorage(imgSrc, (thumb) => {
-    const entry = {
-      id: Date.now(),
-      date: new Date().toISOString(),
-      genre: selectedGenre,
-      score: total,
-      scores,
-      thumb,
-      mode: currentMode,
-      odai: currentOdai || null,
-      良かった点: result['良かった点'],
-      改善ポイント: result['改善ポイント'],
-      'iPhone操作ヒント': result['iPhone操作ヒント'] || '',
-      次のチャレンジ: result['次のチャレンジ']
-    };
+    const entry = { id: Date.now(), date: new Date().toISOString(), genre: selectedGenre, score: total, scores, thumb, mode: currentMode, odai: currentOdai||null, 良かった点: result['良かった点'], 改善ポイント: result['改善ポイント'], 'iPhone操作ヒント': result['iPhone操作ヒント']||'', 次のチャレンジ: result['次のチャレンジ'] };
     history.unshift(entry);
-    // 上限100件・スコア低い順に削除
-    if (history.length > 100) {
-      history.sort((a, b) => b.score - a.score);
-      history = history.slice(0, 100);
-      history.sort((a, b) => new Date(b.date) - new Date(a.date));
-    }
+    if (history.length > 100) { history.sort((a,b)=>b.score-a.score); history=history.slice(0,100); history.sort((a,b)=>new Date(b.date)-new Date(a.date)); }
     saveData();
     updateHome();
     updateBestBackground();
+    checkAndAwardBadges();
   });
 }
-
 function updateBestBackground() {
   const best = getBestEntry();
-  if (best && best.thumb) {
-    document.getElementById('hero-bg').style.backgroundImage = `url(${best.thumb})`;
-  }
+  if (best && best.thumb) document.getElementById('hero-bg').style.backgroundImage = `url(${best.thumb})`;
 }
 
 // ====== GROWTH ======
 function renderGrowth() {
-  const sorted = [...history].sort((a,b) => new Date(a.date)-new Date(b.date));
-  const labels = sorted.map(h => {
-    const d = new Date(h.date);
-    return `${d.getMonth()+1}/${d.getDate()}`;
-  });
-  const scores = sorted.map(h => h.score);
-
+  const sorted = [...history].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const labels = sorted.map(h => { const d=new Date(h.date); return `${d.getMonth()+1}/${d.getDate()}`; });
+  const scores = sorted.map(h=>h.score);
   document.getElementById('g-count').textContent = history.length;
   document.getElementById('growth-summary').innerHTML = calcGrowthSummary();
   if (scores.length) {
     const avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
     document.getElementById('g-avg').textContent = avg;
-    const improve = scores[scores.length-1] - scores[0];
-    document.getElementById('g-improve').textContent = (improve >= 0 ? '+' : '') + improve;
+    const improve = scores[scores.length-1]-scores[0];
+    document.getElementById('g-improve').textContent = (improve>=0?'+':'')+improve;
   }
-
-  // Line chart
   if (lineChart) lineChart.destroy();
   const lc = document.getElementById('line-chart');
-  if (!scores.length) {
-    lc.parentElement.innerHTML = '<div class="card-label">総合スコア推移</div><p style="color:var(--text3);font-size:13px;text-align:center;padding:20px 0">採点するとグラフが表示されます</p>';
-  } else {
-  lineChart = new Chart(lc, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        data: scores,
-        borderColor: '#7F77DD', backgroundColor: 'rgba(127,119,221,0.1)',
-        tension: 0.4, fill: true, pointBackgroundColor: '#7F77DD', pointRadius: 4
-      }]
-    },
-    options: {
-      responsive: true, plugins: {legend:{display:false}},
-      scales: {
-        x: {ticks:{color:'#9090b0',font:{size:10}}, grid:{color: document.documentElement.getAttribute('data-theme')==='light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)'}},
-        y: {min:0, max:100, ticks:{color:'#9090b0',font:{size:10}}, grid:{color: document.documentElement.getAttribute('data-theme')==='light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)'}}
-      }
-    }
-  });
-  }
-
-  // Radar chart
+  if (!scores.length) { lc.parentElement.innerHTML = '<div class="card-label">総合スコア推移</div><p style="color:var(--text3);font-size:13px;text-align:center;padding:20px 0">採点するとグラフが表示されます</p>'; }
+  else { lineChart = new Chart(lc, { type:'line', data:{ labels, datasets:[{ data:scores, borderColor:'#7F77DD', backgroundColor:'rgba(127,119,221,0.1)', tension:0.4, fill:true, pointBackgroundColor:'#7F77DD', pointRadius:4 }] }, options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#9090b0',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}}, y:{min:0,max:100,ticks:{color:'#9090b0',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}} } } }); }
   if (radarChart) radarChart.destroy();
   let avgScores = [0,0,0,0,0];
-  if (history.length) {
-    history.forEach(h => { h.scores.forEach((s,i) => { avgScores[i] += s; }); });
-    avgScores = avgScores.map(s => Math.round(s/history.length));
-  }
+  if (history.length) { history.forEach(h=>{ h.scores.forEach((s,i)=>{ avgScores[i]+=s; }); }); avgScores=avgScores.map(s=>Math.round(s/history.length)); }
   const rc = document.getElementById('radar-chart');
-  radarChart = new Chart(rc, {
-    type: 'radar',
-    data: {
-      labels: ['構図','明るさ','色彩','被写体','物語性'],
-      datasets: [{
-        data: avgScores,
-        borderColor: '#7F77DD', backgroundColor: 'rgba(127,119,221,0.2)',
-        pointBackgroundColor: '#7F77DD', pointRadius: 4
-      }]
-    },
-    options: {
-      responsive: true, plugins: {legend:{display:false}},
-      scales: {r: {min:0, max:20, ticks:{stepSize:5,color:'#9090b0',font:{size:9},backdropColor:'transparent'}, grid:{color: document.documentElement.getAttribute('data-theme')==='light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}, pointLabels:{color:'#9090b0',font:{size:11}}}}
-    }
-  });
+  radarChart = new Chart(rc, { type:'radar', data:{ labels:['構図','明るさ','色彩','被写体','物語性'], datasets:[{ data:avgScores, borderColor:'#7F77DD', backgroundColor:'rgba(127,119,221,0.2)', pointBackgroundColor:'#7F77DD', pointRadius:4 }] }, options:{ responsive:true, plugins:{legend:{display:false}}, scales:{r:{min:0,max:20,ticks:{stepSize:5,color:'#9090b0',font:{size:9},backdropColor:'transparent'},grid:{color:'rgba(255,255,255,0.08)'},pointLabels:{color:'#9090b0',font:{size:11}}}} } });
 }
 
 // ====== HISTORY ======
 function renderHistory() {
   const list = document.getElementById('history-list');
-  if (!history.length) {
-    list.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><p>まだ採点履歴がありません</p></div>`;
-    return;
-  }
+  if (!history.length) { list.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><p>まだ採点履歴がありません</p></div>`; return; }
   list.innerHTML = history.map(h => {
     const d = new Date(h.date);
     const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-    return `
-      <div class="history-item" onclick="openHistoryModal(JSON.parse(decodeURIComponent(this.dataset.entry)))" data-entry="${encodeURIComponent(JSON.stringify(h))}">
-        <div class="history-thumb">${h.thumb ? `<img src="${h.thumb}">` : ''}</div>
-        <div class="history-info">
-          <h4>${h.genre}${h.mode==='odai'?' ★お題':''}</h4>
-          <p>${dateStr}</p>
-          ${h.次のチャレンジ ? `<p style="font-size:10px;color:var(--text3);margin-top:2px">${h.次のチャレンジ}</p>` : ''}
-        </div>
-        <div class="history-score">${h.score}</div>
-      </div>`;
+    return `<div class="history-item" onclick="openHistoryModal(JSON.parse(decodeURIComponent(this.dataset.entry)))" data-entry="${encodeURIComponent(JSON.stringify(h))}"><div class="history-thumb">${h.thumb?`<img src="${h.thumb}">`:''}</div><div class="history-info"><h4>${h.genre}${h.mode==='odai'?' ★お題':''}</h4><p>${dateStr}</p>${h.次のチャレンジ?`<p style="font-size:10px;color:var(--text3);margin-top:2px">${h.次のチャレンジ}</p>`:''}</div><div class="history-score">${h.score}</div></div>`;
   }).join('');
 }
 
 // ====== CLEAR DATA ======
 function clearData() {
   if (confirm('全ての履歴を削除しますか？')) {
-    history = [];
-    saveData();
-    updateHome();
+    history = []; saveData(); updateHome();
+    localStorage.removeItem('sg_badges');
+    localStorage.removeItem('sg_weekly_report');
+    renderHomeBadges();
   }
 }
 </script>
