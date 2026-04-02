@@ -462,6 +462,28 @@
   }
   .tech-weak-hint strong { display: block; margin-bottom: 2px; font-size: 11px; }
 
+  /* ⑥ シェアカード */
+  #share-canvas-wrap { display:none; margin:0 16px 16px; }
+  #share-canvas-wrap canvas { width:100%; border-radius:16px; }
+  .share-btn-row { display:flex; gap:8px; margin-top:8px; }
+  .share-btn { flex:1; padding:12px; border-radius:12px; border:0.5px solid var(--border); background:var(--bg2); color:var(--text); font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+
+  /* ⑩ コツページ */
+  .tips-section { margin:0 16px 12px; }
+  .tips-category { font-size:11px; color:var(--text3); margin:12px 0 6px; }
+  .tips-card { background:var(--bg2); border-radius:12px; border:0.5px solid var(--border); padding:14px; margin-bottom:8px; cursor:pointer; }
+  .tips-card-header { display:flex; justify-content:space-between; align-items:center; }
+  .tips-card-title { font-size:13px; font-weight:500; }
+  .tips-card-icon { font-size:16px; }
+  .tips-card-body { font-size:12px; color:var(--text2); line-height:1.7; margin-top:10px; padding-top:10px; border-top:0.5px solid var(--border); display:none; }
+  .tips-card-body.open { display:block; }
+  .tips-tag { display:inline-block; font-size:10px; padding:2px 8px; border-radius:10px; background:var(--purple-dark); color:var(--purple-light); margin-bottom:6px; }
+
+  /* ⑪ 今日のヒント */
+  .daily-tip-card { margin:0 16px 12px; background:linear-gradient(135deg,var(--purple-dark),rgba(29,158,117,0.15)); border-radius:var(--card-r); border:0.5px solid var(--purple); padding:14px 16px; }
+  .daily-tip-label { font-size:10px; color:var(--purple-light); margin-bottom:4px; font-weight:500; }
+  .daily-tip-text { font-size:13px; color:var(--text); line-height:1.6; }
+
   /* ===== 新機能: 週次AIレポート ===== */
   .weekly-report-card {
     background: var(--bg2); border-radius: var(--card-r); border: 0.5px solid var(--border);
@@ -557,6 +579,10 @@
       </div>
     </div>
 
+    <div class="daily-tip-card">
+      <div class="daily-tip-label">💡 今日のカメラヒント</div>
+      <div class="daily-tip-text" id="daily-tip-text">読み込み中...</div>
+    </div>
     <p class="section-title">採点モードを選ぶ</p>
     <div class="mode-grid">
       <div class="mode-card" onclick="startFreeMode()">
@@ -684,6 +710,13 @@
       <div id="advice-content"><div class="advice-loading"><div class="dots"><span>●</span><span>●</span><span>●</span></div></div></div>
     </div>
 
+    <div id="share-canvas-wrap">
+      <canvas id="share-canvas"></canvas>
+      <div class="share-btn-row">
+        <button class="share-btn" onclick="saveShareImage()">📥 画像を保存</button>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="generateShareCard()" style="margin-bottom:8px;background:var(--bg2);color:var(--purple-light);border:0.5px solid var(--purple);">📤 結果カードを作る</button>
     <button class="btn-primary" style="margin-bottom:20px" onclick="resetScoreScreen(); showScreen('score')">もう1枚採点する</button>
   </div>
 
@@ -739,6 +772,9 @@
     <div class="screen-header">
       <h1>採点履歴</h1>
       <p>過去の写真と結果を確認</p>
+    </div>
+    <div style="display:flex;gap:8px;padding:0 16px;margin-bottom:8px;">
+      <button id="fav-filter-btn" onclick="toggleFavoriteFilter()" style="padding:7px 16px;border-radius:20px;border:0.5px solid var(--border);background:var(--bg2);color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--font-sans);">⭐ お気に入りのみ</button>
     </div>
 
     <!-- ビフォーアフター比較ボタン -->
@@ -826,6 +862,120 @@
     </div>
 
     <div id="technique-list"></div>
+  </div>
+
+  <!-- TIPS SCREEN ⑩ -->
+  <div id="screen-tips" class="screen hidden">
+    <div class="screen-header">
+      <h1>撮影のコツ</h1>
+      <p>iPhoneカメラを使いこなそう</p>
+    </div>
+    <div class="tips-section">
+      <div class="tips-category">📷 基本操作</div>
+
+      <div class="tips-card" onclick="toggleTip(this)">
+        <div class="tips-card-header">
+          <span class="tips-card-title">ピントの合わせ方</span>
+          <span class="tips-card-icon">＋</span>
+        </div>
+        <div class="tips-card-body">
+          <span class="tips-tag">構図・被写体</span>
+          <p>撮りたいものをタップするだけでピントが合います。タップした場所に自動でピントが合い、そこを基準に明るさも調整されます。人物を撮るときは顔をタップしましょう。</p>
+        </div>
+      </div>
+
+      <div class="tips-card" onclick="toggleTip(this)">
+        <div class="tips-card-header">
+          <span class="tips-card-title">明るさの調整方法</span>
+          <span class="tips-card-icon">＋</span>
+        </div>
+        <div class="tips-card-body">
+          <span class="tips-tag">明るさ</span>
+          <p>画面をタップしてピントを合わせた後、画面上に太陽☀のマークが出ます。この太陽マークを上下にスライドすることで、写真の明るさを自由に調整できます。暗いと感じたら上にスライドしてみましょう。</p>
+        </div>
+      </div>
+
+      <div class="tips-card" onclick="toggleTip(this)">
+        <div class="tips-card-header">
+          <span class="tips-card-title">ピントを固定する方法</span>
+          <span class="tips-card-icon">＋</span>
+        </div>
+        <div class="tips-card-body">
+          <span class="tips-tag">構図・被写体</span>
+          <p>撮りたい場所を長押し（1〜2秒）すると「AE/AFロック」と表示されます。これでピントと明るさが固定されるので、カメラを少し動かして構図を整えてから撮影できます。</p>
+        </div>
+      </div>
+
+      <div class="tips-category">🎨 構図のコツ</div>
+
+      <div class="tips-card" onclick="toggleTip(this)">
+        <div class="tips-card-header">
+          <span class="tips-card-title">三分割法とは？</span>
+          <span class="tips-card-icon">＋</span>
+        </div>
+        <div class="tips-card-body">
+          <span class="tips-tag">構図</span>
+          <p>画面を縦横それぞれ3等分した線（グリッド線）を想像してください。この線が交差する4点のどこかに主役を置くと、バランスのいい写真になります。カメラアプリの設定でグリッドを表示できます（設定→カメラ→グリッド）。</p>
+        </div>
+      </div>
+
+      <div class="tips-card" onclick="toggleTip(this)">
+        <div class="tips-card-header">
+          <span class="tips-card-title">余白を上手に使う</span>
+          <span class="tips-card-icon">＋</span>
+        </div>
+        <div class="tips-card-body">
+          <span class="tips-tag">構図</span>
+          <p>主役の周りに少し空間（余白）を作ると、写真に「呼吸」が生まれます。特に動いているものや顔が向いている方向に余白を作ると、見る人が自然と視線を動かしてくれます。</p>
+        </div>
+      </div>
+
+      <div class="tips-card" onclick="toggleTip(this)">
+        <div class="tips-card-header">
+          <span class="tips-card-title">低い角度・高い角度で撮る</span>
+          <span class="tips-card-icon">＋</span>
+        </div>
+        <div class="tips-card-body">
+          <span class="tips-tag">構図・物語性</span>
+          <p>同じ被写体でも、カメラを低くして見上げるように撮ると迫力が出ます。逆に高い位置から見下ろして撮ると、広がりや全体感が出ます。いつもの目線以外で撮る習慣をつけましょう。</p>
+        </div>
+      </div>
+
+      <div class="tips-category">✨ 光・色のコツ</div>
+
+      <div class="tips-card" onclick="toggleTip(this)">
+        <div class="tips-card-header">
+          <span class="tips-card-title">逆光を味方にする</span>
+          <span class="tips-card-icon">＋</span>
+        </div>
+        <div class="tips-card-body">
+          <span class="tips-tag">明るさ・物語性</span>
+          <p>太陽を背にして撮る「逆光」は、葉っぱや花が光で透けてきれいに見えます。ただし人物の顔が暗くなりやすいので、顔をタップして明るさを調整しましょう。夕暮れの逆光は特にドラマチックな写真になります。</p>
+        </div>
+      </div>
+
+      <div class="tips-card" onclick="toggleTip(this)">
+        <div class="tips-card-header">
+          <span class="tips-card-title">「ゴールデンアワー」を活用</span>
+          <span class="tips-card-icon">＋</span>
+        </div>
+        <div class="tips-card-body">
+          <span class="tips-tag">色彩・物語性</span>
+          <p>日の出後1時間、日の入り前1時間は「ゴールデンアワー」と呼ばれ、光が柔らかくオレンジ色になります。この時間帯に撮ると、どんな写真もドラマチックで温かみのある雰囲気になります。</p>
+        </div>
+      </div>
+
+      <div class="tips-card" onclick="toggleTip(this)">
+        <div class="tips-card-header">
+          <span class="tips-card-title">ポートレートモードを使う</span>
+          <span class="tips-card-icon">＋</span>
+        </div>
+        <div class="tips-card-body">
+          <span class="tips-tag">被写体・色彩</span>
+          <p>iPhoneの「ポートレート」モードを使うと、背景がぼけて（ボケ効果）主役が際立ちます。人物だけでなく、花や食べ物にも使えます。撮影後にボケの強さを調整することも可能です。</p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- SETTINGS SCREEN -->
@@ -919,6 +1069,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
       <span>学習</span>
     </div>
+    <div class="nav-item" onclick="showScreen('tips')" id="nav-tips">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 3-2 5.5-5 6.5V17H10v-1.5C7 14.5 5 12 5 9a7 7 0 0 1 7-7z"/><path d="M10 21h4"/><path d="M12 17v4"/></svg>
+      <span>コツ</span>
+    </div>
     <div class="nav-item" onclick="showScreen('settings')" id="nav-settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       <span>設定</span>
@@ -931,6 +1085,8 @@
 <script>
 // ====== STATE ======
 let currentScreen = 'home';
+const scoreCache = new Map();
+let currentImageHash = null;
 let currentMode = 'free';
 let selectedGenre = '風景・自然';
 let currentImageBase64 = null;
@@ -1290,6 +1446,8 @@ ${summary}
 
 中学生にわかりやすい言葉で、全体で200字程度にまとめてください。`;
 
+  let _retried = false;
+  const _doAnalyze = async () => {
   try {
     const data = await callOpenRouterWithFallback({
       apiKey,
@@ -1504,6 +1662,7 @@ function updateHome() {
   renderHomeBadges();
   updateGenreAnalysis();
   updateLevelDisplay();
+  updateDailyTip();
 }
 
 // ====== お題 ======
@@ -1677,15 +1836,31 @@ function selectGenre(el) {
 }
 
 // ====== FILE UPLOAD ======
+function simpleHash(str) {
+  let h = 0;
+  for (let i = 0; i < Math.min(str.length, 300); i++) { h = ((h << 5) - h + str.charCodeAt(i)) | 0; }
+  return h.toString(36);
+}
+
 function handleFile(e) {
   const file = e.target.files[0]; if (!file) return;
+  // ② 処理中表示
+  const ua = document.getElementById('upload-area');
+  ua.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2)"><svg class="spin" style="width:28px;height:28px;margin-bottom:8px;display:block;margin:0 auto 8px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><p style="font-size:13px">読み込み中...</p></div>';
+  ua.onclick = null;
   const reader = new FileReader();
   reader.onload = (ev) => {
     compressImage(ev.target.result, 1200, 0.85, (compressed) => {
       currentImageBase64 = compressed.split(',')[1];
+      currentImageHash = simpleHash(currentImageBase64);
       document.getElementById('preview-section').style.display = 'block';
       document.getElementById('upload-area').style.display = 'none';
       document.getElementById('preview-img').src = compressed;
+      // ① キャッシュあれば通知
+      const cacheKey = currentImageHash + '_' + selectedGenre;
+      if (scoreCache.has(cacheKey)) {
+        document.getElementById('analyze-btn').innerHTML = '⚡ 採点済み（キャッシュ表示）';
+      }
     });
   };
   reader.readAsDataURL(file);
@@ -1710,11 +1885,27 @@ async function analyzePhoto() {
   const apiKey = localStorage.getItem('sg_api_key');
   if (!apiKey) { alert('設定からOpenRouter APIキーを入力してください'); return; }
   if (!currentImageBase64) { alert('写真を選んでください'); return; }
+  // ① キャッシュチェック
+  const _cacheKey = (currentImageHash || simpleHash(currentImageBase64)) + '_' + selectedGenre;
+  if (scoreCache.has(_cacheKey)) {
+    showResult(scoreCache.get(_cacheKey));
+    return;
+  }
+  if (currentMode === 'odai' && !currentOdai) { alert('お題を選んでください'); return; }
+
   const btn = document.getElementById('analyze-btn');
   btn.disabled = true;
-  btn.innerHTML = '<svg class="spin" style="width:18px;height:18px;vertical-align:middle;margin-right:6px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>採点中...';
+
+  // ④ プログレスアニメ
+  const _steps = ['📷 写真を解析中...', '🔍 構図・色彩を確認中...', '✍️ アドバイスを生成中...'];
+  let _si = 0;
+  const _stimer = setInterval(() => {
+    _si = (_si + 1) % _steps.length;
+    if (btn.disabled) btn.innerHTML = `<svg class="spin" style="width:15px;height:15px;vertical-align:middle;margin-right:5px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>${_steps[_si]}`;
+  }, 2200);
+  btn.innerHTML = `<svg class="spin" style="width:15px;height:15px;vertical-align:middle;margin-right:5px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>${_steps[0]}`;
+
   const odaiText = currentMode === 'odai' && currentOdai ? `\nお題：「${currentOdai}」` : '';
-  if (currentMode === 'odai' && !currentOdai) { alert('お題を選んでください'); btn.disabled=false; btn.textContent='AIに採点してもらう'; return; }
   const prompt = `あなたは写真採点の専門家です。以下の厳密な採点基準に従い、同じ写真には常に同じ点数をつけてください。${odaiText ? '\nお題：「' + currentOdai + '」に対して採点してください。' : ''}
 
 【採点基準（各0〜20点）】
@@ -1750,17 +1941,28 @@ async function analyzePhoto() {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('JSONを取得できませんでした:\n' + text.slice(0,200));
     const result = JSON.parse(jsonMatch[0]);
+    scoreCache.set(_cacheKey, result); // ①キャッシュ保存
     showResult(result);
   } catch(e) {
     const errMsg = e.message || '不明なエラー';
+    // ③ ネットワークエラー時1回だけ自動リトライ
+    if (!_retried && (errMsg.includes('fetch') || errMsg.includes('network') || errMsg.includes('Failed'))) {
+      _retried = true;
+      btn.innerHTML = '<svg class="spin" style="width:15px;height:15px;vertical-align:middle;margin-right:5px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>再試行中...';
+      await new Promise(r => setTimeout(r, 2000));
+      return _doAnalyze();
+    }
     if (errMsg.includes('No endpoints') || errMsg.includes('not a valid model')) {
-      alert('採点に失敗しました。\n\nAIモデルが一時的に利用できません。\nしばらく待ってから再度お試しください。\n\n（' + errMsg.slice(0,80) + '）');
+      alert('採点に失敗しました。\n\nAIモデルが一時的に利用できません。\nしばらく待ってから再度お試しください。');
     } else {
       alert('採点に失敗しました。\n\nエラー：' + errMsg.slice(0,100) + '\n\n少し待ってから再度お試しください。');
     }
   } finally {
+    clearInterval(_stimer);
     btn.disabled = false; btn.textContent = 'AIに採点してもらう';
   }
+  };
+  _doAnalyze();
 }
 
 // ====== RESULT ======
@@ -1832,7 +2034,9 @@ function renderGrowth() {
 function renderHistory() {
   const list = document.getElementById('history-list');
   if (!history.length) { list.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><p>まだ採点履歴がありません</p></div>`; return; }
-  list.innerHTML = history.map(h => {
+  const displayHistory = showingFavorites ? history.filter(h => h.favorite) : history;
+  if (showingFavorites && !displayHistory.length) { list.innerHTML = '<div class="empty-state"><p>⭐お気に入りがまだありません</p></div>'; return; }
+  list.innerHTML = displayHistory.map(h => {
     const d = new Date(h.date);
     const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
     return `<div class="history-item" onclick="openHistoryModal(JSON.parse(decodeURIComponent(this.dataset.entry)))" data-entry="${encodeURIComponent(JSON.stringify(h))}"><div class="history-thumb">${h.thumb?`<img src="${h.thumb}">`:''}</div><div class="history-info"><h4>${h.genre}${h.mode==='odai'?' ★お題':''}</h4><p>${dateStr}</p>${h.次のチャレンジ?`<p style="font-size:10px;color:var(--text3);margin-top:2px">${h.次のチャレンジ}</p>`:''}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div class="history-score">${h.score}</div><span style="font-size:16px;cursor:pointer;" onclick="event.stopPropagation();toggleFavorite(${h.id})" id="fav-${h.id}">${h.favorite?'⭐':'☆'}</span></div></div>`;
@@ -1909,6 +2113,152 @@ function updateLevelDisplay() {
   let txt = `🎖 ${level.name}`;
   if (next) txt += ` → 次：${next.name}（あと${Math.max(0,next.minCount-history.length)}枚）`;
   el.textContent = txt;
+}
+
+// ====== ⑤ お気に入りフィルター ======
+let showingFavorites = false;
+function toggleFavoriteFilter() {
+  showingFavorites = !showingFavorites;
+  const btn = document.getElementById('fav-filter-btn');
+  if (btn) {
+    btn.style.background = showingFavorites ? 'var(--purple-dark)' : 'var(--bg2)';
+    btn.style.color = showingFavorites ? 'var(--purple-light)' : 'var(--text2)';
+  }
+  renderHistory();
+}
+
+// ====== ⑥ シェアカード（Canvas生成）======
+let lastResult = null;
+let lastTotal = 0;
+
+function generateShareCard() {
+  const wrap = document.getElementById('share-canvas-wrap');
+  const canvas = document.getElementById('share-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 800; canvas.height = 500;
+
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const bg = isDark ? '#0a0a12' : '#f5f5fa';
+  const fg = isDark ? '#f0f0f8' : '#1a1a2e';
+  const sub = isDark ? '#9090b0' : '#555570';
+  const purple = '#7F77DD';
+  const green = '#1D9E75';
+
+  // 背景
+  ctx.fillStyle = bg;
+  ctx.roundRect(0, 0, 800, 500, 20);
+  ctx.fill();
+
+  // 左: 写真
+  if (currentImageBase64) {
+    const img = new Image();
+    img.onload = () => {
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(30, 30, 280, 440, 12);
+      ctx.clip();
+      ctx.drawImage(img, 30, 30, 280, 440);
+      ctx.restore();
+      drawCardText(ctx, canvas, fg, sub, purple, green, isDark);
+      wrap.style.display = 'block';
+    };
+    img.src = `data:image/jpeg;base64,${currentImageBase64}`;
+  } else {
+    drawCardText(ctx, canvas, fg, sub, purple, green, isDark);
+    wrap.style.display = 'block';
+  }
+}
+
+function drawCardText(ctx, canvas, fg, sub, purple, green, isDark) {
+  const score = document.getElementById('result-score').textContent;
+  const genre = document.getElementById('result-genre-tag').textContent;
+  const labels = ['構図','明るさ','色彩','被写体','物語性'];
+  const scores = [0,1,2,3,4].map(i => parseInt(document.getElementById('val-'+i).textContent)||0);
+
+  // アプリ名
+  ctx.fillStyle = purple;
+  ctx.font = 'bold 18px sans-serif';
+  ctx.fillText('SnapGrow', 340, 55);
+
+  // スコア
+  ctx.fillStyle = fg;
+  ctx.font = 'bold 72px sans-serif';
+  ctx.fillText(score, 340, 150);
+  ctx.fillStyle = sub;
+  ctx.font = '16px sans-serif';
+  ctx.fillText('/ 100', 340 + ctx.measureText(score).width + 8, 150);
+  ctx.fillText(genre, 340, 180);
+
+  // バー
+  labels.forEach((l, i) => {
+    const y = 220 + i * 44;
+    ctx.fillStyle = sub;
+    ctx.font = '13px sans-serif';
+    ctx.fillText(l, 340, y);
+    ctx.fillStyle = isDark ? '#1c1c2e' : '#eeeef8';
+    ctx.roundRect(440, y - 14, 300, 10, 5);
+    ctx.fill();
+    ctx.fillStyle = i === 4 ? green : purple;
+    ctx.roundRect(440, y - 14, 300 * scores[i] / 20, 10, 5);
+    ctx.fill();
+    ctx.fillStyle = sub;
+    ctx.font = '12px sans-serif';
+    ctx.fillText(scores[i], 750, y);
+  });
+
+  // フッター
+  const d = new Date();
+  ctx.fillStyle = sub;
+  ctx.font = '11px sans-serif';
+  ctx.fillText(`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} 撮影`, 340, 470);
+}
+
+function saveShareImage() {
+  const canvas = document.getElementById('share-canvas');
+  const link = document.createElement('a');
+  link.download = `snapgrow_${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// ====== ⑩ コツカードのトグル ======
+function toggleTip(card) {
+  const body = card.querySelector('.tips-card-body');
+  const icon = card.querySelector('.tips-card-icon');
+  const isOpen = body.classList.contains('open');
+  // 全て閉じる
+  document.querySelectorAll('.tips-card-body').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.tips-card-icon').forEach(i => i.textContent = '＋');
+  if (!isOpen) {
+    body.classList.add('open');
+    icon.textContent = '－';
+  }
+}
+
+// ====== ⑪ 今日のヒント（毎日変わる） ======
+const DAILY_TIPS = [
+  '画面をタップして撮りたいものにピントを合わせよう。太陽マークを上下にスライドすると明るさも変えられるよ！',
+  '三分割法を試してみよう。画面を9マスに分けたとき、交差点に主役を置くとバランスよく撮れるよ。',
+  '同じ場所でも、しゃがんで低い角度から撮ってみよう。いつもと違う写真が撮れるはず！',
+  '光が差し込む窓の近くで撮ると、自然な明るさで雰囲気のある写真が撮れるよ。',
+  '撮る前にレンズを軽く拭いてみよう。汚れが取れるだけで写真がぐっとクリアになるよ！',
+  '同じ被写体を縦向きと横向き、両方で撮ってみよう。どちらがいい写真か比べてみてね。',
+  '夕方の光（ゴールデンアワー）に外に出てみよう。オレンジ色の温かい光で素敵な写真が撮れるよ。',
+  '風景写真では空と地面のどちらを多く入れるか意識してみよう。空を大きく入れると開放感が出るよ。',
+  'ポートレートモードで近くの花や食べ物を撮ると、背景がぼけてプロっぽい写真になるよ！',
+  '写したいものの後ろに何があるか確認しよう。ごちゃごちゃした背景より、シンプルな背景の方が主役が引き立つよ。',
+  '水たまりや鏡など、反射を使って撮ってみよう。上下が逆さまになる不思議な写真が撮れるよ！',
+  '人や動物を撮るときは目にピントを合わせよう。目が鮮明だと全体がシャープに見えるよ。',
+  '同じ色のものだけを集めて一枚に収めてみよう。統一感があって印象的な写真になるよ！',
+  'お気に入りの写真を見直して、何がよかったのか考えてみよう。次に活かせるヒントが見つかるはず。',
+  '曇りの日は光が柔らかいから、花や人物をきれいに撮るのに向いているよ。雨の日も試してみてね！',
+];
+
+function updateDailyTip() {
+  const el = document.getElementById('daily-tip-text');
+  if (!el) return;
+  const dayIdx = Math.floor(Date.now() / 86400000) % DAILY_TIPS.length;
+  el.textContent = DAILY_TIPS[dayIdx];
 }
 
 // ====== CLEAR DATA ======
