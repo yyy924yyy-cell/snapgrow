@@ -1481,8 +1481,6 @@ ${summary}
 
 中学生にわかりやすい言葉で、全体で200字程度にまとめてください。`;
 
-  let _retried = false;
-  const _doAnalyze = async () => {
   try {
     const data = await callOpenRouterWithFallback({
       apiKey,
@@ -1493,7 +1491,6 @@ ${summary}
     });
     const text = normalizeMessageContent(data?.choices?.[0]?.message?.content) || '';
     if (!text) throw new Error('レポートの生成に失敗しました');
-
     const report = { text, date: new Date().toISOString() };
     localStorage.setItem('sg_weekly_report', JSON.stringify(report));
     showWeeklyReport(report);
