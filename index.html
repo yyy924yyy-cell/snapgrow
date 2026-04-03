@@ -1007,7 +1007,7 @@
 
     <p class="section-title">アプリ情報</p>
     <div class="setting-row">
-      <div class="info"><h4>バージョン</h4><p>1.1.0</p></div>
+      <div class="info"><h4>バージョン</h4><p>1.1.1</p></div>
     </div>
     <div class="setting-row" style="cursor:pointer" onclick="clearData()">
       <div class="info"><h4 style="color:#e24b4a">データをリセット</h4><p>全ての履歴を削除します</p></div>
@@ -1546,9 +1546,27 @@ async function callOpenRouterWithFallback({ apiKey, models, messages, max_tokens
 
 // ====== INIT ======
 window.addEventListener('load', () => {
+  // 強制アップデート処理（古いキャッシュを無視して最新版を読み込む）
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
-    caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      for(let reg of regs) {
+        reg.unregister();
+        console.log('ServiceWorker unregistered for update');
+      }
+    });
+    caches.keys().then(keys => {
+      for(let key of keys) {
+        caches.delete(key);
+        console.log('Cache storage cleared for update');
+      }
+    });
+  }
+  // URLにバージョン情報を付与して強制リロード（一度だけ実行）
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('v') !== '1.1.1') {
+    urlParams.set('v', '1.1.1');
+    window.location.search = urlParams.toString();
+    return;
   }
   loadData();
   applyTheme(localStorage.getItem('sg_theme') || 'dark');
