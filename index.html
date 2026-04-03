@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<script>
+  // 緊急デバッグ: エラーを画面に表示する
+  window.onerror = function(msg, url, lineNo, columnNo, error) {
+    const errorBox = document.createElement('div');
+    errorBox.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:rgba(255,0,0,0.9);color:white;z-index:99999;padding:20px;font-size:14px;word-break:break-all;';
+    errorBox.innerHTML = '<strong>⚠️ JavaScript Error:</strong><br>' + msg + '<br>Line: ' + lineNo + '<br>Column: ' + columnNo;
+    document.body.appendChild(errorBox);
+    return false;
+  };
+  window.onunhandledrejection = function(event) {
+    const errorBox = document.createElement('div');
+    errorBox.style.cssText = 'position:fixed;top:50%;left:0;width:100%;background:rgba(255,100,0,0.9);color:white;z-index:99999;padding:20px;font-size:14px;word-break:break-all;';
+    errorBox.innerHTML = '<strong>⚠️ Promise Rejection:</strong><br>' + event.reason;
+    document.body.appendChild(errorBox);
+  };
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -48,7 +64,9 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     background: var(--bg);
     transition: opacity 0.6s ease;
+    animation: forceHideSplash 1s 5s forwards; /* 5秒後に強制的にスプラッシュを消す */
   }
+  @keyframes forceHideSplash { to { opacity: 0; pointer-events: none; } }
   #splash.hidden { opacity: 0; pointer-events: none; }
   #splash-bg {
     position: absolute; inset: 0;
