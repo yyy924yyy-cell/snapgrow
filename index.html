@@ -1623,12 +1623,35 @@ function loadData() {
   } catch(e) { history = []; }
 }
 function resetScoreScreen() {
+  // 状態リセット
   currentImageBase64 = null;
+  currentImageHash = null; // BUG2: キャッシュハッシュもリセット
+
+  // upload-area を初期状態に完全復元（BUG1・4）
+  const ua = document.getElementById('upload-area');
+  ua.style.display = 'block';
+  ua.style.opacity = '1';
+  ua.style.pointerEvents = 'auto';
+  ua.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <h3>写真を選ぶ</h3>
+    <p>タップしてカメラロールから選択</p>`;
+  ua.onclick = () => document.getElementById('file-input').click(); // BUG1: onclick復元
+
+  // プレビュー非表示
   document.getElementById('preview-section').style.display = 'none';
-  document.getElementById('upload-area').style.display = 'block';
-  document.getElementById('upload-area').style.opacity = '1';
-  document.getElementById('upload-area').style.pointerEvents = 'auto';
-  document.getElementById('file-input').value = '';
+
+  // BUG5: 同じファイルを再選択できるようにinputをリセット
+  const fi = document.getElementById('file-input');
+  fi.value = '';
+
+  // BUG3: 採点ボタンテキストをリセット
+  const btn = document.getElementById('analyze-btn');
+  if (btn) { btn.disabled = false; btn.textContent = 'AIに採点してもらう'; }
+
+  // BUG8: シェアカードを非表示
+  const shareWrap = document.getElementById('share-canvas-wrap');
+  if (shareWrap) shareWrap.style.display = 'none';
 }
 function saveData() {
   try { localStorage.setItem(getDeviceKey(), JSON.stringify(history)); } catch(e) {
@@ -1859,19 +1882,17 @@ function calcGrowthSummary() {
 
 // ====== MODE ======
 function startFreeMode() {
-  currentMode = 'free'; currentImageBase64 = null; resetGenre();
+  currentMode = 'free';
+  resetScoreScreen(); // 全状態をリセット
+  resetGenre();
   document.getElementById('odai-section').style.display = 'none';
-  document.getElementById('preview-section').style.display = 'none';
-  document.getElementById('upload-area').style.display = 'block';
-  document.getElementById('file-input').value = '';
   showScreen('score');
 }
 async function startOdaiMode() {
-  currentMode = 'odai'; currentImageBase64 = null; resetGenre();
+  currentMode = 'odai';
+  resetScoreScreen(); // 全状態をリセット
+  resetGenre();
   document.getElementById('odai-section').style.display = 'block';
-  document.getElementById('preview-section').style.display = 'none';
-  document.getElementById('upload-area').style.display = 'block';
-  document.getElementById('file-input').value = '';
   showScreen('score');
   renderOdaiChoices();
 }
@@ -2024,10 +2045,9 @@ iPhone標準カメラでできる操作（画面タップでピント・太陽�
     showResult(result);
   } catch(e) {
     const errMsg = e.message || '不明なエラー';
-    // ③ ネットワークエラー時1回だけ自動リトライ
-    if (typeof _retried === 'undefined') window._retried = false;
-    if (!window._retried && (errMsg.includes('fetch') || errMsg.includes('network') || errMsg.includes('Failed'))) {
-      window._retried = true;
+    // ③ ネットワークエラー時1回だけ自動リトライ（ローカル変数で管理）
+    if (!_retried && (errMsg.includes('fetch') || errMsg.includes('network') || errMsg.includes('Failed'))) {
+      _retried = true;
       btn.innerHTML = '<svg class="spin" style="width:15px;height:15px;vertical-align:middle;margin-right:5px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>再試行中...';
       await new Promise(r => setTimeout(r, 2000));
       return analyzePhoto();
@@ -2040,7 +2060,6 @@ iPhone標準カメラでできる操作（画面タップでピント・太陽�
   } finally {
     clearInterval(_stimer);
     btn.disabled = false; btn.textContent = 'AIに採点してもらう';
-    window._retried = false;
   }
 }
 
@@ -2118,7 +2137,7 @@ function renderHistory() {
   list.innerHTML = displayHistory.map(h => {
     const d = new Date(h.date);
     const dateStr = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-    return `<div class="history-item" onclick="openHistoryModal(JSON.parse(decodeURIComponent(this.dataset.entry)))" data-entry="${encodeURIComponent(JSON.stringify(h))}"><div class="history-thumb">${h.thumb?`<img src="${h.thumb}">`:''}</div><div class="history-info"><h4>${h.genre}${h.mode==='odai'?' ★お題':''}</h4><p>${dateStr}</p>${h.次のチャレンジ?`<p style="font-size:10px;color:var(--text3);margin-top:2px">${h.次のチャレンジ}</p>`:''}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div class="history-score">${h.score}</div><span style="font-size:16px;cursor:pointer;" onclick="event.stopPropagation();toggleFavorite(${h.id})" id="fav-${h.id}">${h.favorite?'⭐':'☆'}</span></div></div>`;
+    return `<div class="history-item" onclick="openHistoryModal(JSON.parse(decodeURIComponent(this.dataset.entry)))" data-entry="${encodeURIComponent(JSON.stringify(h)).replace(/'/g, '%27')}"><div class="history-thumb">${h.thumb?`<img src="${h.thumb}">`:''}</div><div class="history-info"><h4>${h.genre}${h.mode==='odai'?' ★お題':''}</h4><p>${dateStr}</p>${h.次のチャレンジ?`<p style="font-size:10px;color:var(--text3);margin-top:2px">${h.次のチャレンジ}</p>`:''}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div class="history-score">${h.score}</div><span style="font-size:16px;cursor:pointer;" onclick="event.stopPropagation();toggleFavorite(${h.id})" id="fav-${h.id}">${h.favorite?'⭐':'☆'}</span></div></div>`;
   }).join('');
 }
 
